@@ -1,0 +1,9 @@
+body {
+    padding:0;
+}
+
+header {
+    background-color: grey;
+    margin: 0;
+    width: 100%;
+}
