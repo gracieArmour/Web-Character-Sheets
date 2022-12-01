@@ -32,9 +32,7 @@ app.post('/post/character', function(req,res) {
 
 // routing for home page using regex to catch possible home path variations
 app.get('/:homePath(home|index|index.html)?', function(req, res) {
-  res.status(200).render('postsPage', {
-    posts: postData
-  });
+  res.status(200).render('home');
 });
 
 // app.get('/posts/:postIndex', function(req, res) {
