@@ -3,13 +3,15 @@
 */
 
 // dependencies
-var express = require('express');
-var exhandle = require('express-handlebars');
-var fs = require('fs');
+const express = require('express');
+const exhandle = require('express-handlebars');
+const fs = require('fs');
+
+// set port value
+var port = process.env.PORT || 3000;
 
 // set up express for use with handlebars
-var app = express();
-var port = process.env.PORT || 3000;
+const app = express();
 
 app.use(express.static('public'));
 
@@ -17,6 +19,14 @@ app.engine('handlebars', exhandle.engine({
   defaultLayout: 'main'
 }));
 app.set('view engine', 'handlebars');
+
+// catch form data
+app.use(express.urlencoded({ extended: false }));
+app.use(express.json);
+
+app.post('/post/character', function(req,res) {
+  console.log(res.body);
+})
 
 // var postData = JSON.parse(fs.readFileSync("./postData.json"));
 
