@@ -1,7 +1,7 @@
 console.log("client-side js loaded");
 
-var formElem = document.getElementById("my-form");
-var submitButton = document.getElementById("submitButton");
+var formElem = document.getElementById("character-sheet");
+var submitButton = document.getElementById("saveButton");
 
 submitButton.addEventListener('click',e => {
     e.preventDefault();
