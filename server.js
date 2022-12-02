@@ -21,8 +21,11 @@ app.engine('handlebars', exhandle.engine({
 }));
 app.set('view engine', 'handlebars');
 
+// var characterFilenames = fs.readdirSync(path.join(__dirname,'character_data'));
+// characterFilenames.forEach
 // var postData = JSON.parse(fs.readFileSync("./postData.json"));
 
+// get list of current systems pages
 var systemsList = fs.readdirSync(path.join(__dirname,'views','systems'));
 systemsList.forEach((name,index) => { systemsList[index] = name.replace(".handlebars","")});
 
@@ -33,25 +36,15 @@ app.get('/:homePath(home|index|index.html)?', function(req, res) {
   });
 });
 
+// routing for systems pages
 app.get('/systems/:sys', function(req, res) {
-  if (req.params['sys']) {
-    res.status(200).render(path.join('systems',req.params['sys']), { layout: 'system' });
+  var sys = req.params.sys;
+  if (systemsList.includes(sys)) {
+    res.status(200).render(path.join('systems',sys), { layout: 'system' });
   }else {
     res.status(404).render('404');
   }
 });
-
-// app.get('/posts/:postIndex', function(req, res) {
-//   var postIndex = req.params.postIndex;
-//   if (postData[postIndex]) {
-//     res.status(200).render('postsPage', {
-//       postOnly: true,
-//       postData: postData[postIndex]
-//     });
-//   }else {
-//     res.status(404).render('404');
-//   }
-// });
 
 // catch form data
 app.post('/save_character', express.json(), function( req, res ) {
