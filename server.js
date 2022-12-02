@@ -20,14 +20,6 @@ app.engine('handlebars', exhandle.engine({
 }));
 app.set('view engine', 'handlebars');
 
-// catch form data
-app.use(express.urlencoded({ extended: false }));
-app.use(express.json);
-
-app.post('/post/character', function(req,res) {
-  console.log(res.body);
-})
-
 // var postData = JSON.parse(fs.readFileSync("./postData.json"));
 
 // routing for home page using regex to catch possible home path variations
@@ -47,11 +39,21 @@ app.get('/:homePath(home|index|index.html)?', function(req, res) {
 //   }
 // });
 
-// routing for 404 error page
-app.get('*', function (req, res) {
-  res.status(404).render('404');
+// catch form data
+// app.use(bodyParser.json);
+// app.use(bodyParser.urlencoded({ extended: false }));
+
+app.post('/api/post/character', express.json(), function( req, res ) {
+  console.log("why");
+  console.log(req.body);
+  res.status(200).send("post successful");
+  res.end();
 });
 
+// routing for 404 error page
+app.use(function (req, res) {
+  res.status(404).render('404');
+});
 
 // server creation
 app.listen(port, function () {
