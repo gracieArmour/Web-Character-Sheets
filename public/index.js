@@ -7,7 +7,7 @@ submitButton.addEventListener('click',e => {
     e.preventDefault();
     var o = {};
     new FormData( formElem ).forEach(( value, key ) => o[key] = value );
-    fetch('/api/post/character', {
+    fetch('/save_character', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'

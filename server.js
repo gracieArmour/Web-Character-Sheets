@@ -27,6 +27,14 @@ app.get('/:homePath(home|index|index.html)?', function(req, res) {
   res.status(200).render('home');
 });
 
+app.get('/system/:sys', function(req, res) {
+  if (req.params['sys']) {
+    res.status(200).render(req.params['sys']);
+  }else {
+    res.status(404).render('404');
+  }
+});
+
 // app.get('/posts/:postIndex', function(req, res) {
 //   var postIndex = req.params.postIndex;
 //   if (postData[postIndex]) {
@@ -40,20 +48,14 @@ app.get('/:homePath(home|index|index.html)?', function(req, res) {
 // });
 
 // catch form data
-// app.use(bodyParser.json);
-// app.use(bodyParser.urlencoded({ extended: false }));
-
-app.post('/api/post/character', express.json(), function( req, res ) {
-  console.log("why");
+app.post('/save_character', express.json(), function( req, res ) {
   console.log(req.body);
   res.status(200).send("post successful");
   res.end();
 });
 
 // routing for 404 error page
-app.use(function (req, res) {
-  res.status(404).render('404');
-});
+app.use((req, res) => {res.status(404).render('404')});
 
 // server creation
 app.listen(port, function () {
