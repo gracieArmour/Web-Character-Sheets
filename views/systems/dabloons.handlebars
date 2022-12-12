@@ -1,3 +1,67 @@
-<form id="character-sheet">
-    <input name="name" placeholder="Character Name"/>
+<form id="main-info-form" method="post">
+    <div class="main-info">
+        <div class="character-img-container">
+            <img id="character-img" src="{{image}}"/>
+            <button id="character-img-edit-button" type="button">✎</button>
+        </div>
+        <input id="name-input" placeholder="Name" name="name" value="{{name}}"/>
+        <div class="character-property">
+            <label>Age</label>
+            <input id="age-input" name="age" value="{{age}}"/>
+        </div>
+        <div class="character-property">
+            <label>Height</label>
+            <input id="height-input" name="height" value="{{height}}"/>
+        </div>
+        <div class="character-property">
+            <label>Weight</label>
+            <input id="weight-input" name="weight" value="{{weight}}"/>
+        </div>
+    </div>
+    <div class="stats">
+        <div class="character-stat">
+            <label for="str-input">Strength</label>
+            <input id="str-input" type="number" name="strength" value="{{strength}}"/>
+        </div>
+        <div class="character-stat">
+            <label for="dex-input">Dexterity</label>
+            <input id="dex-input" type="number" name="dexterity" value="{{dexterity}}"/>
+        </div>
+        <div class="character-stat">
+            <label for="con-input">Constitution</label>
+            <input id="con-input" type="number" name="constitution" value="{{constitution}}"/>
+        </div>
+        <div class="character-stat">
+            <label for="int-input">Intelligence</label>
+            <input id="int-input" type="number" name="intelligence" value="{{intelligence}}"/>
+        </div>
+        <div class="character-stat">
+            <label for="wis-input">Wisdom</label>
+            <input id="wis-input" type="number" name="wisdom" value="{{wisdom}}"/>
+        </div>
+        <div class="character-stat">
+            <label for="chr-input">Charisma</label>
+            <input id="chr-input" type="number" name="charisma" value="{{charisma}}"/>
+        </div>
+    </div>
 </form>
+
+<h2>Features</h2>
+<button class="add-button" id="add-feature-button" type="button">Add Feature</button>
+<div id="features-section" class="features">
+    {{#each features}}
+        {{> featureEntry}}
+    {{/each}}
+</div>
+
+<h2>Spells</h2>
+<button class="add-button" id="add-spell-button" type="button">Add Spell</button>
+<div id="spells-section" class="spells">
+    {{#each spells}}
+        {{> spellEntry}}
+    {{/each}}
+</div>
+
+<script src="/featureEntry.js"></script>
+<script src="/spellEntry.js"></script>
+<script src="/index.js"></script>

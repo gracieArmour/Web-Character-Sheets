@@ -1,7 +1,15 @@
 {
+  "scripts": {
+    "test": "echo Hello World",
+    "db": "mysqld --console",
+    "boot": "concurrently \"npm run db\" \"npm start\""
+  },
   "dependencies": {
+    "concurrently": "^7.6.0",
+    "dotenv": "^16.0.3",
     "express": "^4.18.2",
     "express-handlebars": "^6.0.6",
-    "handlebars": "^4.7.7"
+    "handlebars": "^4.7.7",
+    "mysql": "^2.18.1"
   }
 }
