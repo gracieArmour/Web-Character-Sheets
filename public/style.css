@@ -1,11 +1,254 @@
 body {
-    padding:0;
-    margin:0;
+    font-family: sans-serif;
+    background: rgb(182, 125, 72);
+    color: rgb(11, 11, 0);
 }
 
-header {
-    background-color: grey;
-    margin: 0;
+.main-content {
+    border-radius: 10px;
+    background: rgb(245, 199, 156);
+    max-width: 800px;
+    margin: auto;
+    padding: 16px;
+}
+
+h1 {
+    margin-top: 0;
+    margin-bottom: 5px;
+    text-align: center;
+    font-size: 35px;
+}
+
+.titlebar-nav {
+    display: block;
+}
+
+.titlebar-nav > ul {
+    list-style-type: none;
+    padding: 0;
+    margin: auto;
+    margin-bottom: 10px;
+    width: fit-content;
+    display: flex;
+}
+
+.titlebar-nav li {
+    display: inline-block;
+}
+
+.titlebar-nav a {
+    border: none;
+    background: none;
+    padding: 0;
+    font-size: 20px;
+    text-decoration: underline;
+    color: rgb(73, 17, 17);
+    cursor: pointer;
+}
+
+.titlebar-nav li + li::before {
+    content: "|";
+    color: rgb(182, 125, 72);
+    margin: 0 20px;
+}
+
+#character-img {
+    width: 200px;
+    height: 200px;
+    float: left;
+    background-color: #fff;
+    border: none;
+    margin-right: 10px;
+}
+
+.character-img-container {
+    position: relative;
+}
+
+#character-img-edit-button {
+    position: absolute;
+    top: 0;
+    left: 0;
+    border: none;
+    background: rgba(0, 0, 0, 0.5);
+    cursor: pointer;
+}
+
+#character-img-edit-button:hover {
+    background: rgba(0, 0, 0, 0.7);
+}
+
+#name-input {
+    font-weight: bold;
+    font-size: 30px;
+    width: 346px;
+}
+
+.main-info {
+    overflow: auto;
+    width: 70%;
+    margin: auto;
+}
+
+.character-property {
+    display: grid;
+    grid-template-columns: 60px auto;
+    gap: 5px;
+    margin: 7px 0;
+}
+
+.character-property label {
+    text-align: right;
+}
+
+.stats {
+    margin-top: 15px;
+    text-align: center;
+}
+
+.character-stat {
+    display: inline-block;
+    border: 1px solid rgb(22, 11, 0);
+    border-radius: 4px;
+    width: 90px;
+    text-align: center;
+    padding: 3px 0;
+}
+
+.character-stat label {
+    display: block;
+    width: auto;
+}
+
+.character-stat input {
+    font-size: 20px;
+    width: 50px;
+}
+
+input, textarea {
+    background-color: rgb(255, 230, 206);
+    border: none;
+}
+
+input::placeholder {
+    color: rgb(160, 105, 53);
+}
+
+/* characterList styling */
+
+.character-list .character-entry {
+    border-radius: 6px;
+    background-color: rgb(255, 230, 206);
     padding: 10px;
+    margin: 5px 0;
+    overflow: auto;
+    position: relative;
+}
+
+.character-list img {
+    width: 125px;
+    height: 125px;
+    border-radius: 4px;
+    float: left;
+}
+
+.character-list a.char-link {
+    color: rgb(73, 17, 17);
+    font-size: 30px;
+    font-weight: bold;
+    margin-left: 10px;
+}
+
+.character-list .delete-link {
+    color:white;
+    font-size: 20px;
+    text-decoration: none;
+    background-color: rgb(226, 53, 47);
+    width: 25px;
+    height: 25px;
+    text-align: center;
+    border-radius: 5px;
+
+    position: absolute;
+    right: 10px;
+    top: 10px;
+}
+
+.character-list .delete-link:hover {
+    background-color: rgb(165, 28, 23);
+}
+
+/* Features & Spells */
+
+h2 {
+    display: inline-block;
+}
+
+.add-button {
+    background-color: rgb(78, 188, 59);
+    border: none;
+    color: white;
+    font-size: 16px;
+    padding: 6px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.add-button:hover {
+    background-color: rgb(79, 151, 67);
+}
+
+.add-button::before {
+    content: "+";
+    margin-right: 4px;
+}
+
+.entry {
+    border-radius: 6px;
+    background-color: rgb(255, 230, 206);
+    padding: 10px;
+    margin: 5px 0;
+    overflow: auto;
+    position: relative;
+}
+
+.entry div {
+    margin: 8px 0;
+}
+
+.entry input, .entry textarea {
+    background-color: white;
+}
+
+div.entry-name {
+    margin-top: 0;
+    width: 50%;
+}
+
+.entry-name input {
+    font-size: 22px;
+    font-weight: bold;
     width: 100%;
+}
+
+.entry-description label {
+    width: auto;
+}
+
+.entry-description textarea {
+    width: 100%;
+    height: 40px;
+    resize: vertical;
+}
+
+.entry-description ~ div {
+    display: inline-block;
+}
+
+.entry-description + div {
+    margin: 0;
+}
+
+.entry-description ~ div:not(.entry-description + div) {
+    margin: 0 20px;
 }
