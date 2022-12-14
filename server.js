@@ -99,8 +99,6 @@ app.post('/save_character', express.json(), function(req, res) {
 });
 
 app.post('/database', function(req, res) {
-  connection.connect();
-
   connection.query('SELECT * FROM test', (err, rows, fields) => {
     if (err) {
       console.log(err);
@@ -110,8 +108,6 @@ app.post('/database', function(req, res) {
       });
     }
   })
-
-  connection.end();
   res.status(200).send("posted");
 })
 
