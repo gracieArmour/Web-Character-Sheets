@@ -1,4 +1,13 @@
 <nav id="site-nav">
-    <div class="nav-button"><a href="/home">Home</a></div>
-    <div class="nav-button"><a class="dropdown-toggle" href="#" role="button">Systems▾</a></div>
+    <div class="nav-button">
+        <a href="/home">Home</a>
+    </div>
+    <div class="nav-button">
+        <a id="systems-dropdown-button" class="dropdown-toggle" href="#" role="button">Systems▾</a>
+        <ul id="systems-dropdown" class="dropdown-list hidden">
+            {{#each systems}}
+                {{> dropdownEntry}}
+            {{/each}}
+        </ul>
+    </div>
 </nav>

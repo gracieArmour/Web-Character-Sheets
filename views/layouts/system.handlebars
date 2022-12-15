@@ -6,11 +6,14 @@
     </head>
     <body>
         {{> header}}
-        {{> navbar}}
-
-        {{> utilbar}}
+        {{> navbar this}}
 
         <main id="main-content">
+            <div id="system-header">
+                <h2>{{sysName}}</h2>
+                {{> utilbar}}
+            </div>
+
             {{{body}}}
         </main>
     </body>

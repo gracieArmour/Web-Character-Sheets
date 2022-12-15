@@ -50,6 +50,7 @@ systemsList.forEach((name,index) => { systemsList[index] = name.replace(".handle
 
 // routing for home page using regex to catch possible home path variations
 app.get('/:homePath(home|index|index.html)?', function(req, res) {
+  console.log(req.socket.remoteAddress);
   res.status(200).render('home', {
     systems: systemsList
   });
@@ -60,7 +61,9 @@ app.get('/systems/:sys', function(req, res) {
   var sys = req.params.sys;
   if (systemsList.includes(sys)) {
     res.status(200).render(path.join('systems',sys), {
-      layout: 'system'
+      layout: 'system',
+      sysName: sys,
+      systems: systemsList
     });
   }else {
     res.status(404).render('404');
@@ -83,11 +86,14 @@ app.get('/load_character/:sys/:charid', function(req, res) {
           context[key] = rows[0][key];
         });
         context['layout'] = 'system';
+        context['systems'] = systemsList;
         res.status(200).render(path.join('systems',sys), context);
       }
     })
   }else {
-    res.status(404).render('404');
+    res.status(404).render('404', {
+      systems: systemsList
+    });
   }
 });
 
@@ -112,7 +118,9 @@ app.post('/database', function(req, res) {
 })
 
 // routing for 404 error page
-app.use((req, res) => {res.status(404).render('404')});
+app.use((req, res) => {res.status(404).render('404', {
+  systems: systemsList
+})});
 
 // server creation
 app.listen(port, function () {
