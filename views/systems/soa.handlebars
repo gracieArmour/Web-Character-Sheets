@@ -1,0 +1,97 @@
+{{> basicInfo}}
+
+<div id="level-container" class="container">
+    <label>Level</label>
+    <p id="level-value" class="big-number">0</p>
+    <button id="modify-level-button">+</button>
+</div>
+
+<div id="stats-section" class="container">
+    <div id="stat-mighty-container" class="stat-container">
+        <label>Mighty</label>
+        <input id="stat-mighty-value" class="stat-value big-number" value="{{mighty}}">
+        <p id="debility-weakened-label" class="debility-label">Weakened</p>
+        <input id="debility-weakened-checkbox" class="debility-checkbox" type="checkbox" value="yes" {{#if weakened}}checked{{/if}}>
+        <button id="modify-mighty-button" class="modify-stat-button">+</button>
+    </div>
+    <div id="stat-agile-container" class="stat-container">
+        <label>Agile</label>
+        <input id="stat-agile-value" class="stat-value big-number" value="{{agile}}">
+        <p id="debility-shaky-label" class="debility-label">Shaky</p>
+        <input id="debility-shaky-checkbox" class="debility-checkbox" type="checkbox" value="yes" {{#if shaky}}checked{{/if}}>
+        <button id="modify-agile-button" class="modify-stat-button">+</button>
+    </div>
+    <div id="stat-versed-container" class="stat-container">
+        <label>Versed</label>
+        <input id="stat-versed-value" class="stat-value big-number" value="{{versed}}">
+        <p id="debility-addled-label" class="debility-label">Addled</p>
+        <input id="debility-addled-checkbox" class="debility-checkbox" type="checkbox" value="yes" {{#if addled}}checked{{/if}}>
+        <button id="modify-versed-button" class="modify-stat-button">+</button>
+    </div>
+    <div id="stat-cunning-container" class="stat-container">
+        <label>Cunning</label>
+        <input id="stat-cunning-value" class="stat-value big-number" value="{{cunning}}">
+        <p id="debility-confused-label" class="debility-label">Confused</p>
+        <input id="debility-confused-checkbox" class="debility-checkbox" type="checkbox" value="yes" {{#if confused}}checked{{/if}}>
+        <button id="modify-cunning-button" class="modify-stat-button">+</button>
+    </div>
+    <div id="stat-spirited-container" class="stat-container">
+        <label>Spirited</label>
+        <input id="stat-spirited-value" class="stat-value big-number" value="{{spirited}}">
+        <p id="debility-broken-label" class="debility-label">Broken</p>
+        <input id="debility-broken-checkbox" class="debility-checkbox" type="checkbox" value="yes" {{#if broken}}checked{{/if}}>
+        <button id="modify-spirited-button" class="modify-stat-button">+</button>
+    </div>
+</div>
+
+<div id="combat-section" class="container">
+    <div id="hp-container">
+        <label>Hit Points</label>
+        <input id="hp-display" class="big-number" value="{{currentHP}}">
+        <input id="hp-slider" type="range" value="{{currentHP}}" min="0" max="{{maxHP}}" oninput="this.previousElementSibling.value = this.value">
+    </div>
+    <div id="armor-container">
+        <label>Armor</label>
+        <input id="armor-value" class="big-number" value="{{armor}}">
+    </div>
+    <div "damage-container">
+        <label>Damage</label>
+        <input id="damage-value" value="1d6+{{damage}}">
+    </div>
+</div>
+
+<div id="equipment-section" class="container">
+    <label>Equipment</label>
+    <button class="add-button" id="add-equipment-button" type="button">Add Item</button>
+    <div id="equipment-list">
+        {{#each equipment}}
+            {{> soaEquipmentEntry}}
+        {{/each}}
+    </div>
+</div>
+
+<div id="moves-section" class="container">
+    <label>Moves</label>
+    <button class="add-button" id="add-move-button" type="button">New Move</button>
+    <div id="move-list">
+        {{#each moves}}
+            {{> soaMoveEntry}}
+        {{/each}}
+    </div>
+</div>
+
+<div id="spell-section" class="container">
+    <label>Arcane Schools and Mystic Invocations</label>
+    <button class="add-button" id="add-spell-button" type="button">New School/Invocation</button>
+    <div id="spell-list">
+        {{#each spell}}
+            {{> soaSpellEntry}}
+        {{/each}}
+    </div>
+</div>
+
+<!--additional file dependencies-->
+<link rel="stylesheet" href="/soa.css"/>
+<script src="/soaEquipmentEntry.js"></script>
+<script src="/soaMoveEntry.js"></script>
+<script src="/soaSpellEntry.js"></script>
