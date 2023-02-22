@@ -11,3 +11,92 @@
     width: 20px;
     height: 20px;
 }
+
+#character-img {
+    width: 200px;
+    height: 200px;
+    float: left;
+    background-color: #fff;
+    border: none;
+    margin-right: 10px;
+}
+
+.character-img-container {
+    position: relative;
+}
+
+#character-img-edit-button {
+    position: absolute;
+    top: 0;
+    left: 0;
+    border: none;
+    background: rgba(0, 0, 0, 0.5);
+    cursor: pointer;
+}
+
+#character-img-edit-button:hover {
+    background: rgba(0, 0, 0, 0.7);
+}
+
+#name-input {
+    font-weight: bold;
+    font-size: 30px;
+    width: 346px;
+}
+
+.main-info {
+    overflow: auto;
+    width: 70%;
+    margin: auto;
+}
+
+.character-property {
+    display: grid;
+    grid-template-columns: 60px auto;
+    gap: 5px;
+    margin: 7px 0;
+}
+
+.character-property label {
+    text-align: right;
+}
+
+/* Level */
+
+
+/* Stats */
+.stat-container {
+    background-color: #474747;
+    margin: 5px;
+    padding: 5px;
+    position: relative;
+    width: 85px;
+}
+
+.stat-container label {
+}
+
+.modify-stat-button {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    width: 20px;
+    height: 20px;
+    text-align: center;
+}
+
+.stat-value {
+    display: block;
+    margin: auto;
+}
+
+.debility-label {
+    margin-top: 5px;
+    font-size: smaller;
+    float: left;
+}
+
+.debility-checkbox {
+    margin-top: 7px;
+    float: inline-end;
+}

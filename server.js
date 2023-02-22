@@ -60,10 +60,12 @@ app.get('/:homePath(home|index|index.html)?', function(req, res) {
 app.get('/systems/:sys', function(req, res) {
   var sys = req.params.sys;
   if (systemsList.includes(sys)) {
+    
     res.status(200).render(path.join('systems',sys), {
       layout: 'system',
       sysName: sys,
-      systems: systemsList
+      systems: systemsList,
+      sheetContext: placeholder
     });
   }else {
     res.status(404).render('404');

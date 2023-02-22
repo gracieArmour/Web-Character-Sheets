@@ -7,40 +7,45 @@
 </div>
 
 <div id="stats-section" class="container">
+    {{#each stats}}
+        {{> soaStatBox statsList}}
+    {{/each}}
     <div id="stat-mighty-container" class="stat-container">
         <label>Mighty</label>
-        <input id="stat-mighty-value" class="stat-value big-number" value="{{mighty}}">
-        <p id="debility-weakened-label" class="debility-label">Weakened</p>
-        <input id="debility-weakened-checkbox" class="debility-checkbox" type="checkbox" value="yes" {{#if weakened}}checked{{/if}}>
         <button id="modify-mighty-button" class="modify-stat-button">+</button>
+        <input id="stat-mighty-value" class="stat-value big-number" value="{{mighty}}">
+        <div id="debility-weakened-container" class="debility-conatiner">
+            <p id="debility-weakened-label" class="debility-label">Weakened</p>
+            <input id="debility-weakened-checkbox" class="debility-checkbox" type="checkbox" value="yes" {{#if weakened}}checked{{/if}}>
+        </div>
     </div>
     <div id="stat-agile-container" class="stat-container">
         <label>Agile</label>
+        <button id="modify-agile-button" class="modify-stat-button">+</button>
         <input id="stat-agile-value" class="stat-value big-number" value="{{agile}}">
         <p id="debility-shaky-label" class="debility-label">Shaky</p>
         <input id="debility-shaky-checkbox" class="debility-checkbox" type="checkbox" value="yes" {{#if shaky}}checked{{/if}}>
-        <button id="modify-agile-button" class="modify-stat-button">+</button>
     </div>
     <div id="stat-versed-container" class="stat-container">
         <label>Versed</label>
+        <button id="modify-versed-button" class="modify-stat-button">+</button>
         <input id="stat-versed-value" class="stat-value big-number" value="{{versed}}">
         <p id="debility-addled-label" class="debility-label">Addled</p>
         <input id="debility-addled-checkbox" class="debility-checkbox" type="checkbox" value="yes" {{#if addled}}checked{{/if}}>
-        <button id="modify-versed-button" class="modify-stat-button">+</button>
     </div>
     <div id="stat-cunning-container" class="stat-container">
         <label>Cunning</label>
+        <button id="modify-cunning-button" class="modify-stat-button">+</button>
         <input id="stat-cunning-value" class="stat-value big-number" value="{{cunning}}">
         <p id="debility-confused-label" class="debility-label">Confused</p>
         <input id="debility-confused-checkbox" class="debility-checkbox" type="checkbox" value="yes" {{#if confused}}checked{{/if}}>
-        <button id="modify-cunning-button" class="modify-stat-button">+</button>
     </div>
     <div id="stat-spirited-container" class="stat-container">
         <label>Spirited</label>
+        <button id="modify-spirited-button" class="modify-stat-button">+</button>
         <input id="stat-spirited-value" class="stat-value big-number" value="{{spirited}}">
         <p id="debility-broken-label" class="debility-label">Broken</p>
         <input id="debility-broken-checkbox" class="debility-checkbox" type="checkbox" value="yes" {{#if broken}}checked{{/if}}>
-        <button id="modify-spirited-button" class="modify-stat-button">+</button>
     </div>
 </div>
 
