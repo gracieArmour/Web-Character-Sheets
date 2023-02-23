@@ -2,6 +2,8 @@
   "scripts": {
     "test": "echo Hello World",
     "db": "mysqld --console",
+    "build": "handlebars views/partials/soaEquipmentEntry.handlebars -f public/soaEquipmentEntry.js && handlebars views/partials/soaMoveEntry.handlebars -f public/soaMoveEntry.js && handlebars views/partials/soaSpellEntry.handlebars -f public/soaSpellEntry.js",
+    "prestart": "npm run build",
     "boot": "concurrently \"npm run db\" \"npm start\""
   },
   "dependencies": {

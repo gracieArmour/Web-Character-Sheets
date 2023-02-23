@@ -114,6 +114,10 @@ header {
     font-variant-caps: small-caps;
 }
 
+#system-header {
+    margin-bottom: 30px;
+}
+
 
 .hidden {
     display:none;

@@ -59,13 +59,16 @@ app.get('/:homePath(home|index|index.html)?', function(req, res) {
 // routing for systems pages
 app.get('/systems/:sys', function(req, res) {
   var sys = req.params.sys;
+  var context = {};
   if (systemsList.includes(sys)) {
-    
+    if (sys=="soa") {
+      context['statsList'] = [{statName:"Mighty",debilityName:"Weakened"},{statName:"Agile",debilityName:"Shaky"},{statName:"Versed",debilityName:"Addled"},{statName:"Cunning",debilityName:"Confused"},{statName:"Spirited",debilityName:"Broken"}]
+    }
     res.status(200).render(path.join('systems',sys), {
       layout: 'system',
       sysName: sys,
       systems: systemsList,
-      sheetContext: placeholder
+      sheetContext: context
     });
   }else {
     res.status(404).render('404');

@@ -2,51 +2,14 @@
 
 <div id="level-container" class="container">
     <label>Level</label>
-    <p id="level-value" class="big-number">0</p>
     <button id="modify-level-button">+</button>
+    <div id="level-value" class="big-number">0</div>
 </div>
 
 <div id="stats-section" class="container">
-    {{#each stats}}
-        {{> soaStatBox statsList}}
+    {{#each sheetContext.statsList}}
+        {{> soaStatBox}}
     {{/each}}
-    <div id="stat-mighty-container" class="stat-container">
-        <label>Mighty</label>
-        <button id="modify-mighty-button" class="modify-stat-button">+</button>
-        <input id="stat-mighty-value" class="stat-value big-number" value="{{mighty}}">
-        <div id="debility-weakened-container" class="debility-conatiner">
-            <p id="debility-weakened-label" class="debility-label">Weakened</p>
-            <input id="debility-weakened-checkbox" class="debility-checkbox" type="checkbox" value="yes" {{#if weakened}}checked{{/if}}>
-        </div>
-    </div>
-    <div id="stat-agile-container" class="stat-container">
-        <label>Agile</label>
-        <button id="modify-agile-button" class="modify-stat-button">+</button>
-        <input id="stat-agile-value" class="stat-value big-number" value="{{agile}}">
-        <p id="debility-shaky-label" class="debility-label">Shaky</p>
-        <input id="debility-shaky-checkbox" class="debility-checkbox" type="checkbox" value="yes" {{#if shaky}}checked{{/if}}>
-    </div>
-    <div id="stat-versed-container" class="stat-container">
-        <label>Versed</label>
-        <button id="modify-versed-button" class="modify-stat-button">+</button>
-        <input id="stat-versed-value" class="stat-value big-number" value="{{versed}}">
-        <p id="debility-addled-label" class="debility-label">Addled</p>
-        <input id="debility-addled-checkbox" class="debility-checkbox" type="checkbox" value="yes" {{#if addled}}checked{{/if}}>
-    </div>
-    <div id="stat-cunning-container" class="stat-container">
-        <label>Cunning</label>
-        <button id="modify-cunning-button" class="modify-stat-button">+</button>
-        <input id="stat-cunning-value" class="stat-value big-number" value="{{cunning}}">
-        <p id="debility-confused-label" class="debility-label">Confused</p>
-        <input id="debility-confused-checkbox" class="debility-checkbox" type="checkbox" value="yes" {{#if confused}}checked{{/if}}>
-    </div>
-    <div id="stat-spirited-container" class="stat-container">
-        <label>Spirited</label>
-        <button id="modify-spirited-button" class="modify-stat-button">+</button>
-        <input id="stat-spirited-value" class="stat-value big-number" value="{{spirited}}">
-        <p id="debility-broken-label" class="debility-label">Broken</p>
-        <input id="debility-broken-checkbox" class="debility-checkbox" type="checkbox" value="yes" {{#if broken}}checked{{/if}}>
-    </div>
 </div>
 
 <div id="combat-section" class="container">
@@ -65,30 +28,30 @@
     </div>
 </div>
 
-<div id="equipment-section" class="container">
+<div id="equipment-section" class="container list-section">
     <label>Equipment</label>
     <button class="add-button" id="add-equipment-button" type="button">Add Item</button>
-    <div id="equipment-list">
+    <div id="equipment-list" class="list">
         {{#each equipment}}
             {{> soaEquipmentEntry}}
         {{/each}}
     </div>
 </div>
 
-<div id="moves-section" class="container">
+<div id="moves-section" class="container  list-section">
     <label>Moves</label>
     <button class="add-button" id="add-move-button" type="button">New Move</button>
-    <div id="move-list">
+    <div id="move-list" class="list">
         {{#each moves}}
             {{> soaMoveEntry}}
         {{/each}}
     </div>
 </div>
 
-<div id="spell-section" class="container">
+<div id="spell-section" class="container  list-section">
     <label>Arcane Schools and Mystic Invocations</label>
     <button class="add-button" id="add-spell-button" type="button">New School/Invocation</button>
-    <div id="spell-list">
+    <div id="spell-list" class="list">
         {{#each spell}}
             {{> soaSpellEntry}}
         {{/each}}
@@ -97,6 +60,7 @@
 
 <!--additional file dependencies-->
 <link rel="stylesheet" href="/soa.css"/>
-<script src="/soaEquipmentEntry.js"></script>
-<script src="/soaMoveEntry.js"></script>
-<script src="/soaSpellEntry.js"></script>
+<script src="/soa.js" defer></script>
+<script src="/soaEquipmentEntry.js" defer></script>
+<script src="/soaMoveEntry.js" defer></script>
+<script src="/soaSpellEntry.js" defer></script>

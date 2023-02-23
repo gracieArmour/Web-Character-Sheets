@@ -1,13 +1,12 @@
 <form class="entry item-entry" method="post">
-    <div class="entry-name item-input">
-        <input name="item-name" placeholder="Name" value="{{item-name}}"/>
-    </div>
-    <div class="entry-description item-input">
-        <label>Description</label>
-        <textarea name="item-description">{{item-description}}</textarea>
-    </div>
-    <div class="entry-amount item-input">
-        <label>Uses</label>
-        <input type="number" name="item-amount" value="{{item-amount}}"/>
+    <label>
+        <input name="item-name" placeholder="Name" value="{{name}}"/>
+    </label>
+    <div class="item-info">
+        <textarea class="item-description" name="item-description" placeholder="Description">{{desc}}</textarea>
+        <div class="item-uses">
+            <label>Uses</label>
+            <input type="number" class="big-number" name="item-amount" value="{{uses}}"/>
+        </div>
     </div>
 </form>

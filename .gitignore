@@ -1,2 +1,5 @@
 node_modules/
 .env
+soaEquipmentEntry.js
+soaMoveEntry.js
+soaSpellEntry.js

@@ -1,19 +1,13 @@
 <form class="entry spell-entry" method="post">
     <div class="entry-name spell-input">
         <label>
-            <input name="spell-name" placeholder="Name" value="{{spell-name}}"/>
+            <input name="spell-name" placeholder="Name" value="{{name}}"/>
         </label>
     </div>
     <div class="entry-description spell-input">
-        <label>
-            Description
-            <textarea name="spell-description">{{spell-description}}</textarea>
-        </label>
+        <textarea name="spell-description" placeholder="Description">{{desc}}</textarea>
     </div>
     <div class="entry-source spell-input">
-        <label>
-            Source
-            <input name="spell-source" value="{{spell-source}}"/>
-        </label>
+        <input name="spell-source" placeholder="Source" value="{{source}}"/>
     </div>
 </form>
