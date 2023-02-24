@@ -1,60 +1,70 @@
 {{> basicInfo}}
 
-<div id="level-container" class="container">
-    <label>Level</label>
-    <button id="modify-level-button">+</button>
-    <div id="level-value" class="big-number">0</div>
-</div>
+<div id="section-container">
+    <div id="left-section" class="split-section">
+        <div id="level-container" class="container">
+            <label>Level</label>
+            <button id="modify-level-button">+</button>
+            <div id="level-value" class="big-number">0</div>
+        </div>
 
-<div id="stats-section" class="container">
-    {{#each sheetContext.statsList}}
-        {{> soaStatBox}}
-    {{/each}}
-</div>
+        <div id="stats-section" class="container">
+            {{#each sheetContext.statsList}}
+                {{> soaStatBox}}
+            {{/each}}
+        </div>
 
-<div id="combat-section" class="container">
-    <div id="hp-container" class="combat-container">
-        <label>Hit Points</label>
-        <input id="hp-display" class="big-number" value="{{currentHP}}">
-        <input id="hp-slider" type="range" value="{{currentHP}}" min="0" max="{{maxHP}}" oninput="this.previousElementSibling.value = this.value">
-    </div>
-    <div id="armor-container" class="combat-container">
-        <label>Armor</label>
-        <input id="armor-value" class="big-number" value="{{armor}}">
-    </div>
-    <div "damage-container" class="combat-container">
-        <label>Damage</label>
-        <input id="damage-value" value="1d6+{{damage}}">
-    </div>
-</div>
+        <div id="combat-section" class="container">
+            <div id="hp-container" class="combat-container">
+                <label>Hit Points</label>
+                <input id="hp-display" class="big-number" value="{{currentHP}}">
+                <input id="hp-slider" type="range" value="{{currentHP}}" min="0" max="{{maxHP}}" oninput="this.previousElementSibling.value = this.value">
+            </div>
+            <div id="armor-container" class="combat-container">
+                <label>Armor</label>
+                <input id="armor-value" class="big-number" value="{{armor}}">
+            </div>
+            <div "damage-container" class="combat-container">
+                <label>Damage</label>
+                <input id="damage-value" value="1d6+{{damage}}">
+            </div>
+        </div>
 
-<div id="equipment-section" class="container list-section">
-    <label>Equipment</label>
-    <button class="add-button" id="add-equipment-button" type="button">Add Item</button>
-    <div id="equipment-list" class="list">
-        {{#each equipment}}
-            {{> soaEquipmentEntry}}
-        {{/each}}
-    </div>
-</div>
+        <div id="equipment-section" class="container list-section">
+            <label>Equipment</label>
+            <button class="add-button" id="add-equipment-button" type="button">Add Item</button>
+            <div id="equipment-list" class="list">
+                {{#each equipment}}
+                    {{> soaEquipmentEntry}}
+                {{/each}}
+            </div>
+        </div>
 
-<div id="moves-section" class="container  list-section">
-    <label>Moves</label>
-    <button class="add-button" id="add-move-button" type="button">New Move</button>
-    <div id="move-list" class="list">
-        {{#each moves}}
-            {{> soaMoveEntry}}
-        {{/each}}
-    </div>
-</div>
+        <div id="moves-section" class="container  list-section">
+            <label>Moves</label>
+            <button class="add-button" id="add-move-button" type="button">New Move</button>
+            <div id="move-list" class="list">
+                {{#each moves}}
+                    {{> soaMoveEntry}}
+                {{/each}}
+            </div>
+        </div>
 
-<div id="spell-section" class="container  list-section">
-    <label>Arcane Schools and Mystic Invocations</label>
-    <button class="add-button" id="add-spell-button" type="button">New School/Invocation</button>
-    <div id="spell-list" class="list">
-        {{#each spell}}
-            {{> soaSpellEntry}}
-        {{/each}}
+        <div id="spell-section" class="container  list-section">
+            <label>Arcane Schools and Mystic Invocations</label>
+            <button class="add-button" id="add-spell-button" type="button">New School/Invocation</button>
+            <div id="spell-list" class="list">
+                {{#each spell}}
+                    {{> soaSpellEntry}}
+                {{/each}}
+            </div>
+        </div>
+    </div>
+    <div id="right-container" class="split-section">
+        <div id="notes-section">
+            <label><h2>Notes</h2></label>
+            <textarea id="character-notes"></textarea>
+        </div>
     </div>
 </div>
 

@@ -41,9 +41,6 @@ setTimeout(function() {
   });
 }, 4000);
 
-// var characterFilenames = fs.readdirSync(path.join(__dirname,'character_data'));
-// characterFilenames.forEach
-// var postData = JSON.parse(fs.readFileSync("./postData.json"));
 
 // get list of current systems pages
 var systemsList = fs.readdirSync(path.join(__dirname,'views','systems'));
@@ -52,7 +49,6 @@ systemsList.forEach((name,index) => { systemsList[index] = name.replace(".handle
 
 // context variables to be used in page routing
 var responseContext = {
-  layout: 'main',
   sysName: '',
   systems: systemsList,
   sheetContext: {
@@ -82,6 +78,7 @@ app.get('/systems/:sys', function(req, res) {
     
     // send response
     res.status(200).render(path.join('systems',sys), responseContext);
+    delete responseContext.layout;
   }else {
     res.status(404).render('404', responseContext);
   }
@@ -108,6 +105,7 @@ app.get('/load_character/:sys/:charid', function(req, res) {
 
         // send response
         res.status(200).render(path.join('systems',sys), responseContext);
+        delete responseContext.layout;
       }
     })
   }else {

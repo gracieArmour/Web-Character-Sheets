@@ -16,3 +16,4 @@ document.getElementById("add-spell-button").addEventListener("click", function (
 	section.insertAdjacentHTML('beforeend', newHTML);
 });
 
+var simplemde = new SimpleMDE({ element: document.getElementById("character-notes") });

@@ -1,3 +1,4 @@
+/* general for whole page */
 .container {
     background-color: #333333;
     margin: 10px;
@@ -11,6 +12,18 @@
 .big-number {
     width: 20px;
     height: 20px;
+    text-align: center;
+}
+
+/* big sections */
+#section-container {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+}
+
+#left-section {
+    margin-right: 40px;
 }
 
 
@@ -267,3 +280,6 @@
 .spell-description {
     width: 500px; 
 }
+
+
+/* Notes */
