@@ -1,0 +1,9 @@
+{
+	"restrictAccess": true,
+    "allowedAddresses": [
+        "::1",
+		"::ffff:127.0.0.1",
+		"127.0.0.1",
+		"::ffff:10.0.0.148"
+    ]
+}

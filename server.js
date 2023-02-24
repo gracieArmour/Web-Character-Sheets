@@ -18,6 +18,26 @@ var port = process.env.PORT || 3000;
 // set up express for use with handlebars
 const app = express();
 
+// server config
+app.use((req, res, next) => {
+    fs.readFile(__dirname + '/config.json', function(err, file) {
+        if(err) return next(new Error("Internal error : " + err.message));
+
+        const config = JSON.parse(file.toString('utf8'));
+		
+		//WHITELIST
+        if(!config.restrictAccess) return next();
+        
+        var ip = req.socket.remoteAddress;
+
+        if(ip == null || config.allowedAddresses.indexOf(ip) == -1) {
+            console.log("Access denied from remote IP " + ip);
+            return next(new Error("Your IP address is not allowed to access this resource."));
+        }
+        next();
+    });
+});
+
 app.use(express.static('public'));
 
 app.engine('handlebars', exhandle.engine({
@@ -31,6 +51,7 @@ var connection;
 setTimeout(function() {
   connection = mysql.createConnection({
     host: process.env.DBADDRESS,
+	port: process.env.DBPORT,
     user: process.env.DBUSER,
     password: process.env.DBPASS,
     database: process.env.DBNAME
