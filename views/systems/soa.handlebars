@@ -13,16 +13,16 @@
 </div>
 
 <div id="combat-section" class="container">
-    <div id="hp-container">
+    <div id="hp-container" class="combat-container">
         <label>Hit Points</label>
         <input id="hp-display" class="big-number" value="{{currentHP}}">
         <input id="hp-slider" type="range" value="{{currentHP}}" min="0" max="{{maxHP}}" oninput="this.previousElementSibling.value = this.value">
     </div>
-    <div id="armor-container">
+    <div id="armor-container" class="combat-container">
         <label>Armor</label>
         <input id="armor-value" class="big-number" value="{{armor}}">
     </div>
-    <div "damage-container">
+    <div "damage-container" class="combat-container">
         <label>Damage</label>
         <input id="damage-value" value="1d6+{{damage}}">
     </div>

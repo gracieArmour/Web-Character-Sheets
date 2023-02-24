@@ -15,16 +15,26 @@
 
 
 /* basic info */
+#main-info-form {
+    display: flex;
+    flex-direction: column;
+}
+
+#main-info {
+    display: flex;
+    flex-direction: row;
+}
+
 #character-img {
-    width: 200px;
-    height: 200px;
+    width: 150px;
+    height: 150px;
     float: left;
     background-color: #fff;
     border: none;
     margin-right: 10px;
 }
 
-.character-img-container {
+#character-img-container {
     position: relative;
 }
 
@@ -41,16 +51,21 @@
     background: rgba(0, 0, 0, 0.7);
 }
 
+#character-properties-container {
+    display:flex;
+    flex-direction: column;
+}
+
 #name-input {
     font-weight: bold;
     font-size: 30px;
     width: 346px;
 }
 
-.main-info {
-    overflow: auto;
-    width: 70%;
-    margin: auto;
+#main-info {
+    height: fit-content;
+    width: fit-content;
+    margin: 20px;
 }
 
 .character-property {
@@ -86,6 +101,7 @@
     right: 5px;
     width: 20px;
     height: 20px;
+    padding: 0;
     text-align: center;
     border-radius: 50%;
 }
@@ -102,11 +118,17 @@
     background-color: #474747;
     margin: 5px;
     padding: 5px;
+    width: 90px;
+    border-radius: 5px;
     position: relative;
-    width: 85px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-around;
 }
 
 .stat-container label {
+    margin-right: 15px;
 }
 
 .modify-stat-button {
@@ -115,16 +137,14 @@
     right: 5px;
     width: 20px;
     height: 20px;
+    padding: 0;
     text-align: center;
-}
-
-.stat-value {
-    display: block;
-    margin: auto;
+    border-radius: 50%;
 }
 
 .debility-label {
     margin-top: 5px;
+    margin-bottom: 0;
     font-size: smaller;
     float: left;
 }
@@ -134,10 +154,50 @@
     float: inline-end;
 }
 
+/* Combat */
+.combat-container {
+    background-color: #474747;
+    margin: 5px;
+    padding: 5px;
+    width: 90px;
+    border-radius: 5px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-around;
+}
+
+/* HP */
+#hp-display {
+    height: 35px;
+    width: 35px;
+}
+
+#hp-slider {
+    width: 60px;
+}
+
+/* Armor */
+#armor-value {
+    margin-bottom: 10px;
+    width: 25px;
+    height: 25px;
+}
+
+/* Damage */
+#damage-value {
+    width: 65px;
+}
+
 
 /* Lists general */
 .list-section {
     flex-direction: column;
+}
+
+.add-button {
+    width: fit-content;
+    border-radius: 4px;
 }
 
 .list {
@@ -150,14 +210,25 @@
     margin: 5px;
     padding: 5px;
     border-radius: 3px;
-}
-
-/* Equipment */
-.item-entry {
     display: flex;
     flex-direction: column;
 }
 
+.entry label input {
+    width: 150px;
+}
+
+.entry-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.entry-description {
+    width: 500px;
+    height: 100px;
+}
+
+/* Equipment */
 .item-info {
     display:flex;
     flex-direction: row;
@@ -172,12 +243,27 @@
     margin: 3px;
 }
 
+.item-uses label {
+    font-size: small;
+}
+
+.item-info .entry-description {
+    width: 150px;
+    height: auto;
+}
+
 .item-uses input {
     display: block;
+    height: 30px;
+    width: 30px;
 }
 
 /* Moves */
-
+.move-description {
+    width: 500px; 
+}
 
 /* Spells */
-
+.spell-description {
+    width: 500px; 
+}

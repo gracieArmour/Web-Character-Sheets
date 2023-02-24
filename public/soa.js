@@ -15,3 +15,4 @@ document.getElementById("add-spell-button").addEventListener("click", function (
 	var section = document.getElementById('spell-list');
 	section.insertAdjacentHTML('beforeend', newHTML);
 });
+

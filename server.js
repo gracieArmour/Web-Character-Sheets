@@ -9,6 +9,7 @@ const exhandle = require('express-handlebars');
 const mysql = require('mysql');
 const fs = require('fs');
 const path = require('path');
+const { response } = require('express');
 // var db = require('./my_modules/db.js');
 
 // collect environmentally stored variables
@@ -48,30 +49,41 @@ setTimeout(function() {
 var systemsList = fs.readdirSync(path.join(__dirname,'views','systems'));
 systemsList.forEach((name,index) => { systemsList[index] = name.replace(".handlebars","")});
 
+
+// context variables to be used in page routing
+var responseContext = {
+  layout: 'main',
+  sysName: '',
+  systems: systemsList,
+  sheetContext: {
+    statsList: []
+  }
+};
+
+var listStats = {
+  soa: [{statName:"Mighty",debilityName:"Weakened"},{statName:"Agile",debilityName:"Shaky"},{statName:"Versed",debilityName:"Addled"},{statName:"Cunning",debilityName:"Confused"},{statName:"Spirited",debilityName:"Broken"}],
+  dnd: []
+};
+
 // routing for home page using regex to catch possible home path variations
 app.get('/:homePath(home|index|index.html)?', function(req, res) {
   console.log(req.socket.remoteAddress);
-  res.status(200).render('home', {
-    systems: systemsList
-  });
+  res.status(200).render('home', responseContext);
 });
 
 // routing for systems pages
 app.get('/systems/:sys', function(req, res) {
   var sys = req.params.sys;
-  var context = {};
   if (systemsList.includes(sys)) {
-    if (sys=="soa") {
-      context['statsList'] = [{statName:"Mighty",debilityName:"Weakened"},{statName:"Agile",debilityName:"Shaky"},{statName:"Versed",debilityName:"Addled"},{statName:"Cunning",debilityName:"Confused"},{statName:"Spirited",debilityName:"Broken"}]
-    }
-    res.status(200).render(path.join('systems',sys), {
-      layout: 'system',
-      sysName: sys,
-      systems: systemsList,
-      sheetContext: context
-    });
+    // modify context
+    responseContext['sheetContext']['statsList'] = listStats[sys];
+    responseContext['layout'] = 'system';
+    responseContext['sysName'] = sys;
+    
+    // send response
+    res.status(200).render(path.join('systems',sys), responseContext);
   }else {
-    res.status(404).render('404');
+    res.status(404).render('404', responseContext);
   }
 });
 
@@ -79,7 +91,6 @@ app.get('/systems/:sys', function(req, res) {
 app.get('/load_character/:sys/:charid', function(req, res) {
   var sys = req.params.sys;
   var id = req.params.charid;
-  var context = {};
   if (systemsList.includes(sys)) {
     console.log('SELECT * FROM '+sys+'_characters WHERE id='+id);
     connection.query('SELECT * FROM '+sys+'_characters WHERE id='+id, (err, rows, fields) => {
@@ -87,18 +98,20 @@ app.get('/load_character/:sys/:charid', function(req, res) {
         console.log(err);
       }else {
         console.log(rows);
+        // modify context
         Object.keys(rows[0]).forEach(key => {
-          context[key] = rows[0][key];
+          responseContext['sheetContext'][key] = rows[0][key];
         });
-        context['layout'] = 'system';
-        context['systems'] = systemsList;
-        res.status(200).render(path.join('systems',sys), context);
+        responseContext['sheetContext']['statsList'] = listStats[sys];
+        responseContext['layout'] = 'system';
+        responseContext['sysName'] = sys;
+
+        // send response
+        res.status(200).render(path.join('systems',sys), responseContext);
       }
     })
   }else {
-    res.status(404).render('404', {
-      systems: systemsList
-    });
+    res.status(404).render('404', responseContext);
   }
 });
 
@@ -123,9 +136,7 @@ app.post('/database', function(req, res) {
 })
 
 // routing for 404 error page
-app.use((req, res) => {res.status(404).render('404', {
-  systems: systemsList
-})});
+app.use((req, res) => {res.status(404).render('404', responseContext)});
 
 // server creation
 app.listen(port, function () {
