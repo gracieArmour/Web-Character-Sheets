@@ -51,7 +51,7 @@ var connection;
 setTimeout(function() {
   connection = mysql.createConnection({
     host: process.env.DBADDRESS,
-	port: process.env.DBPORT,
+	  port: process.env.DBPORT,
     user: process.env.DBUSER,
     password: process.env.DBPASS,
     database: process.env.DBNAME
@@ -123,6 +123,7 @@ app.get('/load_character/:sys/:charid', function(req, res) {
         responseContext['sheetContext']['statsList'] = listStats[sys];
         responseContext['layout'] = 'system';
         responseContext['sysName'] = sys;
+        responseContext['charID'] = id;
 
         // send response
         res.status(200).render(path.join('systems',sys), responseContext);
