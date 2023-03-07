@@ -276,6 +276,12 @@
     width: 500px; 
 }
 
+.filter-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
 /* Spells */
 .spell-description {
     width: 500px; 

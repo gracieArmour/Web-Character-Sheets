@@ -18,6 +18,45 @@ document.getElementById("add-spell-button").addEventListener("click", function (
 
 var simplemde = new SimpleMDE({ element: document.getElementById("character-notes") });
 
+// dropdown logic
+function textFilter(filter,list) {
+	for (var i = 0; i < list.length; i++) {
+		if (list[i].textContent.toUpperCase().indexOf(filter) > -1) {
+			list[i].style.display = "";
+		} else {
+			list[i].style.display = "none";
+		}
+	}
+}
+
+function movefilterLogic() {
+	var dropdownList = document.getElementById("myDropdown").getElementsByTagName("a");
+	// on-page filters
+	
+	// rules-based filters (toggleable)
+
+	// run text filter
+	var filterText = document.getElementById("myInput").value.toUpperCase();
+	textFilter(filterText,dropdownList)
+}
+
+function showdropdownmove() {
+	document.getElementById("myDropdown").classList.toggle("show");
+}
+
+function filterFunction() {
+	var filter = document.getElementById("myInput").value.toUpperCase();
+	var a = document.getElementById("myDropdown").getElementsByTagName("a");
+	for (var i = 0; i < a.length; i++) {
+		txtValue = a[i].textContent || a[i].innerText;
+		if (txtValue.toUpperCase().indexOf(filter) > -1) {
+			a[i].style.display = "";
+		} else {
+			a[i].style.display = "none";
+		}
+	}
+}
+
 // var formElem = document.getElementById("character-sheet");
 // var submitButton = document.getElementById("saveButton");
 

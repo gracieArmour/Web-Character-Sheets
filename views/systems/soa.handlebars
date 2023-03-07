@@ -1,4 +1,4 @@
-<form id="character-sheet" method="post">
+<form id="character-sheet" method="post" data-charid="{{sheetContext.charid}}">
     {{> basicInfo}}
 
     <div id="section-container">
@@ -27,7 +27,7 @@
                 </div>
                 <div "damage-container" class="combat-container">
                     <label>Damage</label>
-                    <input id="damage-value" value="1d6+{{damage}}">
+                    <input id="damage-value" value="{{damage}}">
                 </div>
             </div>
 
@@ -43,20 +43,32 @@
 
             <div id="moves-section" class="container  list-section">
                 <label>Moves</label>
+                <div id="move-filter-container" class="filter-container">
+                    <div id="move-dropdown-container" class="dropdown-container">
+                        <input id="move-search" class="search-bar dropdown-toggle" placeholder="search">
+                        <ul id="move-dropdown" class="dropdown-list">
+                            {{#each moves}}
+                                {{> soaMoveListEntry}}
+                            {{/each}}
+                        </ul>
+                    </div>
+                    <div id="move-type-dropdown-container" class="dropdown-container">
+                        <button id="move-type-selector" class="dropdown-toggle">Type</button>
+                        <ul id="move-type-dropdown" class="dropdown-list">
+                            {{#each moveTypes}}
+                                {{> soaTypeListEntry}}
+                            {{/each}}
+                        </ul>
+                    </div>
+                    <div id="classless-toggle-container">
+                        <label>Classless Mode</label>
+                        <input id="classless-toggle" type="checkbox">
+                    </div>
+                </div>
                 <button class="add-button" id="add-move-button" type="button">New Move</button>
                 <div id="move-list" class="list">
                     {{#each moves}}
                         {{> soaMoveEntry}}
-                    {{/each}}
-                </div>
-            </div>
-
-            <div id="spell-section" class="container  list-section">
-                <label>Arcane Schools and Mystic Invocations</label>
-                <button class="add-button" id="add-spell-button" type="button">New School/Invocation</button>
-                <div id="spell-list" class="list">
-                    {{#each spell}}
-                        {{> soaSpellEntry}}
                     {{/each}}
                 </div>
             </div>
