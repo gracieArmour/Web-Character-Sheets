@@ -1,7 +1,28 @@
+// playbook data
+var playbookData = {};
+
+
+// notes section
+var simplemde = new SimpleMDE({ element: document.getElementById("character-notes") });
+
+
+// listeners
 document.getElementById("add-equipment-button").addEventListener("click", function () {
 	let newHTML = Handlebars.templates.soaEquipmentEntry({});
 	var section = document.getElementById('equipment-list');
 	section.insertAdjacentHTML('beforeend', newHTML);
+});
+
+// move search listeners
+var moveListDropdown = document.getElementById("move-dropdown");
+
+document.getElementById("move-search").addEventListener("focusin", function () {
+	moveListDropdown.classList.remove("hidden");
+	moveFilter();
+});
+
+document.getElementById("move-search").addEventListener("focusout", function () {
+	moveListDropdown.classList.add("hidden");
 });
 
 document.getElementById("add-move-button").addEventListener("click", function () {
@@ -10,49 +31,76 @@ document.getElementById("add-move-button").addEventListener("click", function ()
 	section.insertAdjacentHTML('beforeend', newHTML);
 });
 
-document.getElementById("add-spell-button").addEventListener("click", function () {
-	let newHTML = Handlebars.templates.soaSpellEntry({});
-	var section = document.getElementById('spell-list');
-	section.insertAdjacentHTML('beforeend', newHTML);
-});
-
-var simplemde = new SimpleMDE({ element: document.getElementById("character-notes") });
 
 // dropdown logic
-function textFilter(filter,list) {
-	for (var i = 0; i < list.length; i++) {
-		if (list[i].textContent.toUpperCase().indexOf(filter) > -1) {
-			list[i].style.display = "";
-		} else {
-			list[i].style.display = "none";
-		}
-	}
-}
-
-function movefilterLogic() {
-	var dropdownList = document.getElementById("myDropdown").getElementsByTagName("a");
-	// on-page filters
+function onpageFilter(item) {
+	var moveData = playbookData[item.dataset.moveid];
+	var moveList = [...document.getElementsByClassName("move-entry")].map(elem => {elem.dataset.moveid});
+	var invalid = false;
 	
-	// rules-based filters (toggleable)
+	// type selector
+	var selectedType = document.getElementById("move-type-selector").value;
+	if ((selectedType != "Any") && (moveData.type != selectedType)) {
+		invalid = true;
+	}
 
-	// run text filter
-	var filterText = document.getElementById("myInput").value.toUpperCase();
-	textFilter(filterText,dropdownList)
+	// already have move
+	if (moveList.includes(moveData.id)) {
+		invalid = true;
+	}
+
+	return invalid;
 }
 
-function showdropdownmove() {
-	document.getElementById("myDropdown").classList.toggle("show");
+function rulesFilter(item) {
+	var classlessMode = !(document.getElementById("classless-toggle").checked);
+	var moveData = playbookData[item.dataset.moveid];
+	var moveList = [...document.getElementsByClassName("move-entry")];
+	var charLevel = document.getElementById("level-value").value;
+	var invalid = false;
+
+	// check if valid playbook
+	if (!([...document.getElementsByClassName("playbook-entry")].map(elem => {elem.textContent}).includes(moveData.source)) && (moveData.source != "Custom")) {
+		invalid = true;
+	}
+
+	// check if valid prereqs
+	if (moveData.prereqLevel > charLevel) {
+		invalid = true;
+	}
+	
+	if (!(moveList.map(elem => {elem.dataset.moveid}).includes(moveData.prereqMove)) && (moveData.prereqMove != -1)) {
+		invalid = true;
+	}
+
+	// check if second background available
+	var backgroundList = moveList.filter(move => {move.dataset.type == "Background"}).map(elem => {elem.dataset.moveid});
+	if ((backgroundList != []) && (moveData.type == "Background") && (charLevel < 6)) {
+		invalid = true;
+	}
+
+	return invalid && classlessMode;
 }
 
-function filterFunction() {
-	var filter = document.getElementById("myInput").value.toUpperCase();
-	var a = document.getElementById("myDropdown").getElementsByTagName("a");
-	for (var i = 0; i < a.length; i++) {
-		txtValue = a[i].textContent || a[i].innerText;
-		if (txtValue.toUpperCase().indexOf(filter) > -1) {
-			a[i].style.display = "";
+function textFilter(item) {
+	var invalid = false;
+	
+	// check if name contains current search input
+	if (item.textContent.toUpperCase().indexOf(document.getElementById("move-search").value.toUpperCase()) > -1) {
+		invalid = true;
+	}
+
+	return invalid;
+}
+
+function moveFilter() {
+	var dropdownList = [...document.getElementsByClassName("move-list-entry")];
+
+	for (var i = 0; i < dropdownList.length; i++) {
+		if (onpageFilter(dropdownList[i]) || rulesFilter(dropdownList[i]) || textFilter(dropdownList[i])) {
+			dropdownList[i].style.display = "";
 		} else {
-			a[i].style.display = "none";
+			dropdownList[i].style.display = "none";
 		}
 	}
 }

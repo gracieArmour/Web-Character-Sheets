@@ -45,18 +45,18 @@
                 <label>Moves</label>
                 <div id="move-filter-container" class="filter-container">
                     <div id="move-dropdown-container" class="dropdown-container">
-                        <input id="move-search" class="search-bar dropdown-toggle" placeholder="search">
-                        <ul id="move-dropdown" class="dropdown-list">
+                        <input id="move-search" class="search-bar dropdown-toggle" placeholder="search" onkeyup="moveFilter()">
+                        <ul id="move-dropdown" class="dropdown-list hidden">
                             {{#each moves}}
                                 {{> soaMoveListEntry}}
                             {{/each}}
                         </ul>
                     </div>
-                    <div id="move-type-dropdown-container" class="dropdown-container">
-                        <button id="move-type-selector" class="dropdown-toggle">Type</button>
-                        <ul id="move-type-dropdown" class="dropdown-list">
+                    <div id="move-type-selector-container">
+                        <label>Type</label>
+                        <select id="move-type-selector">
                             {{#each moveTypes}}
-                                {{> soaTypeListEntry}}
+                                {{> soaTypeSelectEntry}}
                             {{/each}}
                         </ul>
                     </div>
