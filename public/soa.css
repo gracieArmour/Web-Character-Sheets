@@ -279,7 +279,10 @@
 .filter-container {
     display: flex;
     flex-direction: row;
-    justify-content: space-between;
+}
+
+.move-filter {
+    margin: 5px;
 }
 
 /* Spells */

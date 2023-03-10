@@ -44,7 +44,7 @@
             <div id="moves-section" class="container  list-section">
                 <label>Moves</label>
                 <div id="move-filter-container" class="filter-container">
-                    <div id="move-dropdown-container" class="dropdown-container">
+                    <div id="move-dropdown-container" class="move-filter dropdown-container">
                         <input id="move-search" class="search-bar dropdown-toggle" placeholder="search" onkeyup="moveFilter()">
                         <ul id="move-dropdown" class="dropdown-list hidden">
                             {{#each moves}}
@@ -52,15 +52,25 @@
                             {{/each}}
                         </ul>
                     </div>
-                    <div id="move-type-selector-container">
+                    <div id="move-type-selector-container" class="move-filter">
                         <label>Type</label>
                         <select id="move-type-selector">
+                            <option value="Any">Any</option>
                             {{#each moveTypes}}
-                                {{> soaTypeSelectEntry}}
+                                <option value="{{this}}">{{this}}</option>
                             {{/each}}
-                        </ul>
+                        </select>
                     </div>
-                    <div id="classless-toggle-container">
+                    <div id="move-playbook-selector-container" class="move-filter">
+                        <label>Playbook</label>
+                        <select id="move-playbook-selector">
+                            <option value="Any">Any</option>
+                            {{#each sheetContext.playbooks}}
+                                <option value="{{this}}">{{this}}</option>
+                            {{/each}}
+                        </select>
+                    </div>
+                    <div id="classless-toggle-container" class="move-filter">
                         <label>Classless Mode</label>
                         <input id="classless-toggle" type="checkbox">
                     </div>
@@ -87,4 +97,4 @@
 <script src="/soa.js" defer></script>
 <script src="/soaEquipmentEntry.js" defer></script>
 <script src="/soaMoveEntry.js" defer></script>
-<script src="/soaSpellEntry.js" defer></script>
+<script src="/soaMoveListEntry.js" defer></script>

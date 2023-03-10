@@ -1,5 +1,5 @@
 // playbook data
-var playbookData = {};
+var playbookMoveData = {};
 
 
 // notes section
@@ -34,13 +34,18 @@ document.getElementById("add-move-button").addEventListener("click", function ()
 
 // dropdown logic
 function onpageFilter(item) {
-	var moveData = playbookData[item.dataset.moveid];
+	var moveData = playbookMoveData[item.dataset.moveid];
 	var moveList = [...document.getElementsByClassName("move-entry")].map(elem => {elem.dataset.moveid});
 	var invalid = false;
 	
 	// type selector
 	var selectedType = document.getElementById("move-type-selector").value;
 	if ((selectedType != "Any") && (moveData.type != selectedType)) {
+		invalid = true;
+	}
+
+	var selectedPlaybook = document.getElementById("move-playbook-selector").value;
+	if ((selectedPlaybook != "Any") && (moveData.playbook != selectedType)) {
 		invalid = true;
 	}
 
@@ -54,7 +59,7 @@ function onpageFilter(item) {
 
 function rulesFilter(item) {
 	var classlessMode = !(document.getElementById("classless-toggle").checked);
-	var moveData = playbookData[item.dataset.moveid];
+	var moveData = playbookMoveData[item.dataset.moveid];
 	var moveList = [...document.getElementsByClassName("move-entry")];
 	var charLevel = document.getElementById("level-value").value;
 	var invalid = false;
@@ -122,6 +127,10 @@ function moveFilter() {
 // })
 
 // var header = document.getElementById("site-header");
+
+// header.addEventListener('click', e => {
+// 	console.log(simplemde.value());
+// });
 
 // header.addEventListener('click', e => {
 //     fetch('/database', {

@@ -2,7 +2,7 @@
   "scripts": {
     "test": "echo Hello World",
     "db": "mysqld --console",
-    "build": "handlebars views/partials/soaEquipmentEntry.handlebars -f public/soaEquipmentEntry.js && handlebars views/partials/soaMoveEntry.handlebars -f public/soaMoveEntry.js && handlebars views/partials/soaMoveListEntry.handlebars -f public/soaMoveListEntry.js && handlebars views/partials/soaTypeSelectEntry.handlebars -f public/soaTypeSelectEntry.js",
+    "build": "handlebars views/partials/soaEquipmentEntry.handlebars -f public/soaEquipmentEntry.js && handlebars views/partials/soaMoveEntry.handlebars -f public/soaMoveEntry.js && handlebars views/partials/soaMoveListEntry.handlebars -f public/soaMoveListEntry.js",
     "prestart": "npm run build",
     "boot": "concurrently \"npm run db\" \"npm start\""
   },
