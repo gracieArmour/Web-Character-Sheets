@@ -5,19 +5,17 @@
             <img id="character-img" src="{{image}}"/>
             <button id="character-img-edit-button" type="button">✎</button>
         </div>
+        
         <div id="character-properties-container">
-            <div class="character-property">
-                <label>Age</label>
-                <input id="age-input" name="age" value="{{age}}"/>
-            </div>
-            <div class="character-property">
-                <label>Height</label>
-                <input id="height-input" name="height" value="{{height}}"/>
-            </div>
-            <div class="character-property">
-                <label>Weight</label>
-                <input id="weight-input" name="weight" value="{{weight}}"/>
-            </div>
+            <ul id="basic-properties-list">
+                {{#each basicProperties}}
+                    <li class="character-property">
+                        <label>{{name}}</label>
+                        <input id="{{name}}-input" name="{{name}}" value="{{value}}"/>
+                    </li>
+                {{/each}}
+            </ul>
+            <button class="add-button" id="add-basic-property-button" type="button">Add Property</button>
         </div>
     </div>
 </form>

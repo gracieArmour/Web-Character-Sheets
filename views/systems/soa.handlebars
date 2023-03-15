@@ -1,12 +1,34 @@
 <form id="character-sheet" method="post" data-charid="{{sheetContext.charid}}">
-    {{> basicInfo}}
+    {{> basicInfo sheetContext}}
 
     <div id="section-container">
         <div id="left-section" class="split-section">
-            <div id="level-container" class="container">
-                <label>Level</label>
-                <button id="modify-level-button">+</button>
-                <div id="level-value" class="big-number">0</div>
+            <div id="playbook-section" class="container">
+                <div id="playbook-container">
+                    <label>Playbooks</label>
+                    <div id="playbook-dropdown-container" class="dropdown-container">
+                        <input id="playbook-search" class="search-bar dropdown-toggle" placeholder="search" onkeyup="playbookFilter()">
+                        <ul id="playbook-dropdown" class="playbook-list hidden">
+                            {{#each sheetContext.allPlaybooks}}
+                                <li class="playbook-list-entry">{{this}}</li>
+                            {{/each}}
+                        </ul>
+                    </div>
+                    <div id="playbook-list" class="list">
+                        {{#each sheetContext.playbooks}}
+                            <div class="playbook-entry">
+                                {{this}}
+                                <button id="delete-playbook-button">x</button>
+                            </div>
+                        {{/each}}
+                    </div>
+                </div>
+
+                <div id="level-container">
+                    <label>Level</label>
+                    <button id="modify-level-button">+</button>
+                    <div id="level-value" class="big-number">0</div>
+                </div>
             </div>
 
             <div id="stats-section" class="container">
@@ -21,10 +43,12 @@
                     <input id="hp-display" class="big-number" value="{{currentHP}}">
                     <input id="hp-slider" type="range" value="{{currentHP}}" min="0" max="{{maxHP}}" oninput="this.previousElementSibling.value = this.value">
                 </div>
+
                 <div id="armor-container" class="combat-container">
                     <label>Armor</label>
                     <input id="armor-value" class="big-number" value="{{armor}}">
                 </div>
+
                 <div "damage-container" class="combat-container">
                     <label>Damage</label>
                     <input id="damage-value" value="{{damage}}">
@@ -33,9 +57,17 @@
 
             <div id="equipment-section" class="container list-section">
                 <label>Equipment</label>
+                <div id="equipment-dropdown-container" class="dropdown-container">
+                        <input id="equipment-search" class="search-bar dropdown-toggle" placeholder="search" onkeyup="equipmentFilter()">
+                        <ul id="equipment-dropdown" class="equipment-list hidden">
+                            {{#each sheetContext.allEquipment}}
+                                <li class="equipment-list-entry">{{this}}</li>
+                            {{/each}}
+                        </ul>
+                    </div>
                 <button class="add-button" id="add-equipment-button" type="button">Add Item</button>
                 <div id="equipment-list" class="list">
-                    {{#each equipment}}
+                    {{#each sheetContext.equipment}}
                         {{> soaEquipmentEntry}}
                     {{/each}}
                 </div>
@@ -47,11 +79,12 @@
                     <div id="move-dropdown-container" class="move-filter dropdown-container">
                         <input id="move-search" class="search-bar dropdown-toggle" placeholder="search" onkeyup="moveFilter()">
                         <ul id="move-dropdown" class="dropdown-list hidden">
-                            {{#each moves}}
-                                {{> soaMoveListEntry}}
+                            {{#each sheetContext.allMoves}}
+                                <li class="move-list-entry" data-moveid="{{id}}" data-type="{{type}}" data-playbook="{{playbook}}">{{name}}</li>
                             {{/each}}
                         </ul>
                     </div>
+
                     <div id="move-type-selector-container" class="move-filter">
                         <label>Type</label>
                         <select id="move-type-selector">
@@ -61,6 +94,7 @@
                             {{/each}}
                         </select>
                     </div>
+                    
                     <div id="move-playbook-selector-container" class="move-filter">
                         <label>Playbook</label>
                         <select id="move-playbook-selector">
@@ -83,10 +117,14 @@
                 </div>
             </div>
         </div>
+
         <div id="right-container" class="split-section">
             <div id="notes-section">
                 <label><h2>Notes</h2></label>
                 <textarea id="character-notes"></textarea>
+            </div>
+            <div id="debug-area">
+                <pre>{{raw}}</pre>
             </div>
         </div>
     </div>

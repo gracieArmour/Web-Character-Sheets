@@ -1,5 +1,6 @@
 node_modules/
 .env
+basicPropertyEntry.js
 soaEquipmentEntry.js
 soaMoveEntry.js
 soaMoveListEntry.js

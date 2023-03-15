@@ -64,9 +64,12 @@
     background: rgba(0, 0, 0, 0.7);
 }
 
-#character-properties-container {
+#basic-properties-list {
     display:flex;
     flex-direction: column;
+    flex-wrap: wrap;
+    max-height: 150px;
+    padding: 0;
 }
 
 #name-input {
@@ -85,7 +88,7 @@
     display: grid;
     grid-template-columns: 60px auto;
     gap: 5px;
-    margin: 7px 0;
+    margin: 7px 7px;
 }
 
 .character-property label {

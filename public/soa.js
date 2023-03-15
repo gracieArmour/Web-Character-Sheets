@@ -13,6 +13,36 @@ document.getElementById("add-equipment-button").addEventListener("click", functi
 	section.insertAdjacentHTML('beforeend', newHTML);
 });
 
+document.getElementById("add-basic-property-button").addEventListener("click", function () {
+	let newHTML = Handlebars.templates.basicPropertyEntry({});
+	var section = document.getElementById('basic-properties-list');
+	section.insertAdjacentHTML('beforeend', newHTML);
+});
+
+// playbook search listeners
+var playbookListDropdown = document.getElementById("playbook-dropdown");
+
+document.getElementById("playbook-search").addEventListener("focusin", function () {
+	playbookListDropdown.classList.remove("hidden");
+	moveFilter();
+});
+
+document.getElementById("playbook-search").addEventListener("focusout", function () {
+	playbookListDropdown.classList.add("hidden");
+});
+
+// equipment search listeners
+var equipmentListDropdown = document.getElementById("equipment-dropdown");
+
+document.getElementById("equipment-search").addEventListener("focusin", function () {
+	equipmentListDropdown.classList.remove("hidden");
+	moveFilter();
+});
+
+document.getElementById("equipment-search").addEventListener("focusout", function () {
+	equipmentListDropdown.classList.add("hidden");
+});
+
 // move search listeners
 var moveListDropdown = document.getElementById("move-dropdown");
 
@@ -87,22 +117,49 @@ function rulesFilter(item) {
 	return invalid && classlessMode;
 }
 
-function textFilter(item) {
+function textFilter(item,filter) {
 	var invalid = false;
 	
 	// check if name contains current search input
-	if (item.textContent.toUpperCase().indexOf(document.getElementById("move-search").value.toUpperCase()) > -1) {
+	if (item.textContent.toUpperCase().indexOf(filter.toUpperCase()) > -1) {
 		invalid = true;
 	}
 
 	return invalid;
 }
 
-function moveFilter() {
-	var dropdownList = [...document.getElementsByClassName("move-list-entry")];
+function playbookFilter() {
+	var dropdownList = [...document.getElementsByClassName("playbook-list-entry")];
+	var filterText = document.getElementById("playbook-search").value;
 
 	for (var i = 0; i < dropdownList.length; i++) {
-		if (onpageFilter(dropdownList[i]) || rulesFilter(dropdownList[i]) || textFilter(dropdownList[i])) {
+		if (textFilter(dropdownList[i],filterText)) {
+			dropdownList[i].style.display = "";
+		} else {
+			dropdownList[i].style.display = "none";
+		}
+	}
+}
+
+function equipmentFilter() {
+	var dropdownList = [...document.getElementsByClassName("equipment-list-entry")];
+	var filterText = document.getElementById("equipment-search").value;
+
+	for (var i = 0; i < dropdownList.length; i++) {
+		if (textFilter(dropdownList[i],filterText)) {
+			dropdownList[i].style.display = "";
+		} else {
+			dropdownList[i].style.display = "none";
+		}
+	}
+}
+
+function moveFilter() {
+	var dropdownList = [...document.getElementsByClassName("move-list-entry")];
+	var filterText = document.getElementById("move-search").value;
+
+	for (var i = 0; i < dropdownList.length; i++) {
+		if (onpageFilter(dropdownList[i]) || rulesFilter(dropdownList[i]) || textFilter(dropdownList[i],filterText)) {
 			dropdownList[i].style.display = "";
 		} else {
 			dropdownList[i].style.display = "none";

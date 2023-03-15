@@ -94,9 +94,13 @@ app.get('/systems/:sys', function(req, res) {
   if (systemsList.includes(sys)) {
     // modify context
     responseContext['sheetContext']['statsList'] = listStats[sys];
+    responseContext['sheetContext']['basicProperties'] = [{name:"Age"}, {name:"Height"}, {name:"Weight"}];
     responseContext['layout'] = 'system';
     responseContext['sysName'] = sys;
     
+    // debug
+    responseContext['raw'] = JSON.stringify(responseContext['sheetContext'],undefined,4);
+
     // send response
     res.status(200).render(path.join('systems',sys), responseContext);
     delete responseContext.layout;
@@ -106,7 +110,7 @@ app.get('/systems/:sys', function(req, res) {
 });
 
 // routing for systems pages
-app.get('/load_character/:sys/:charid', function(req, res) {
+app.get('/character/:sys/:charid', function(req, res) {
   var sys = req.params.sys;
   var id = req.params.charid;
   if (systemsList.includes(sys)) {
@@ -121,6 +125,7 @@ app.get('/load_character/:sys/:charid', function(req, res) {
           responseContext['sheetContext'][key] = rows[0][key];
         });
         responseContext['sheetContext']['statsList'] = listStats[sys];
+        responseContext['sheetContext']['basicProperties'] = [{name:"Age"}, {name:"Height"}, {name:"Weight"}];
         responseContext['layout'] = 'system';
         responseContext['sysName'] = sys;
         responseContext['charID'] = id;
