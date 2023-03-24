@@ -102,28 +102,51 @@ class contextBlock {
 }
 
 // routing for home page using regex to catch possible home path variations
-app.get('/:homePath(home|index|index.html)?', function(req, res) {
-  var responseContext = new contextBlock;
-  res.status(200).render('home', responseContext);
-});
+app.get('/:homePath(home|index|index.html)?', (req, res) => {res.status(200).render('home', new contextBlock)});
 
 // routing for systems pages
-app.get('/systems/:sys', function(req, res) {
+app.get('/systems/:sys', (req, res) => {
   var sys = req.params.sys;
   var responseContext = new contextBlock(sys);
   if (systemsList.includes(sys)) {
-    // debug
-    responseContext.rawify();
+    if (sys=="soa") {
+      connection.query('SELECT * FROM soa_moves', (err, rows, fields) => {
+        var output = [];
+        if (err) {
+          console.log(err);
+        }else {
+          rows.forEach(row => {
+            output.push({
+              id: row.id,
+              type: row.type,
+              playbook: row.source,
+              name: row.name
+            });
+          });
+        }
+        responseContext.sheetContext["allMoves"] = output;
 
-    // send response
-    res.status(200).render(path.join('systems',sys), responseContext);
+        // debug
+        responseContext.rawify();
+
+        // send response
+        res.status(200).render(path.join('systems',sys), responseContext);
+      })
+    }else {
+      // debug
+      responseContext.rawify();
+
+      // send response
+      res.status(200).render(path.join('systems',sys), responseContext);
+    }
+  
   }else {
     res.status(404).render('404', responseContext);
   }
 });
 
-// routing for systems pages
-app.get('/character/:sys/:charid', function(req, res) {
+// routing for loaded character pages
+app.get('/character/:sys/:charid', (req, res) => {
   var sys = req.params.sys;
   var id = req.params.charid;
   var responseContext = new contextBlock(sys,id);
@@ -150,23 +173,28 @@ app.get('/character/:sys/:charid', function(req, res) {
 });
 
 // catch form data
-app.post('/save_character', express.json(), function(req, res) {
+app.post('/save_character', express.json(), (req, res) => {
   console.log(req.body);
   res.status(200).send("post successful");
   res.end();
 });
 
-app.post('/database', function(req, res) {
-  connection.query('SELECT * FROM test', (err, rows, fields) => {
-    if (err) {
-      console.log(err);
-    }else {
-      rows.forEach(row => {
-        console.log("ID: "+row.id+", NAME: "+row.name);
-      });
-    }
-  })
-  res.status(200).send("posted");
+app.post('/database/:fetchType', (req, res) => {
+  var fetchType = req.params.fetchType;
+  
+  if (fetchType=="AllMoves") {
+    connection.query('SELECT * FROM soa_moves', (err, rows, fields) => {
+      var output = {};
+      if (err) {
+        console.log(err);
+      }else {
+        rows.forEach(row => {
+          output[row.id] = row;
+        });
+      }
+      res.status(200).send(output);
+    })
+  }
 })
 
 // routing for 404 error page

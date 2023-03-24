@@ -1,6 +1,11 @@
-// playbook data
-var playbookMoveData = {};
-
+// get playbook data
+var playbookMoveData;
+async function getData() {
+	var playbookResponse = await fetch('/database/AllMoves', {method: 'POST'});
+	playbookMoveData = await playbookResponse.json();
+	console.log(playbookMoveData[3]);
+}
+getData();
 
 // notes section
 var simplemde = new SimpleMDE({ element: document.getElementById("character-notes") });
@@ -91,20 +96,21 @@ function rulesFilter(item) {
 	var classlessMode = !(document.getElementById("classless-toggle").checked);
 	var moveData = playbookMoveData[item.dataset.moveid];
 	var moveList = [...document.getElementsByClassName("move-entry")];
+	var playbookList = [...document.getElementsByClassName("playbook-entry")];
 	var charLevel = document.getElementById("level-value").value;
 	var invalid = false;
 
 	// check if valid playbook
-	if (!([...document.getElementsByClassName("playbook-entry")].map(elem => {elem.textContent}).includes(moveData.source)) && (moveData.source != "Custom")) {
+	if ((playbookList.length > 0) && !(playbookList.map(elem => {elem.textContent}).includes(moveData.source)) && (moveData.source != "Custom")) {
 		invalid = true;
 	}
 
 	// check if valid prereqs
-	if (moveData.prereqLevel > charLevel) {
+	if (moveData.prereq_level > charLevel) {
 		invalid = true;
 	}
 	
-	if (!(moveList.map(elem => {elem.dataset.moveid}).includes(moveData.prereqMove)) && (moveData.prereqMove != -1)) {
+	if (!(moveList.map(elem => {elem.dataset.moveid}).includes(moveData.prereq_move)) && (moveData.prereq_move != 0)) {
 		invalid = true;
 	}
 
@@ -118,11 +124,11 @@ function rulesFilter(item) {
 }
 
 function textFilter(item,filter) {
-	var invalid = false;
+	var invalid = true;
 	
 	// check if name contains current search input
 	if (item.textContent.toUpperCase().indexOf(filter.toUpperCase()) > -1) {
-		invalid = true;
+		invalid = false;
 	}
 
 	return invalid;
@@ -134,9 +140,9 @@ function playbookFilter() {
 
 	for (var i = 0; i < dropdownList.length; i++) {
 		if (textFilter(dropdownList[i],filterText)) {
-			dropdownList[i].style.display = "";
-		} else {
 			dropdownList[i].style.display = "none";
+		} else {
+			dropdownList[i].style.display = "";
 		}
 	}
 }
@@ -147,9 +153,9 @@ function equipmentFilter() {
 
 	for (var i = 0; i < dropdownList.length; i++) {
 		if (textFilter(dropdownList[i],filterText)) {
-			dropdownList[i].style.display = "";
-		} else {
 			dropdownList[i].style.display = "none";
+		} else {
+			dropdownList[i].style.display = "";
 		}
 	}
 }
@@ -160,9 +166,9 @@ function moveFilter() {
 
 	for (var i = 0; i < dropdownList.length; i++) {
 		if (onpageFilter(dropdownList[i]) || rulesFilter(dropdownList[i]) || textFilter(dropdownList[i],filterText)) {
-			dropdownList[i].style.display = "";
-		} else {
 			dropdownList[i].style.display = "none";
+		} else {
+			dropdownList[i].style.display = "";
 		}
 	}
 }
