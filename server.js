@@ -26,15 +26,18 @@ app.use((req, res, next) => {
         const config = JSON.parse(file.toString('utf8'));
 		
 		//WHITELIST
-        if(!config.restrictAccess) return next();
-        
-        var ip = req.socket.remoteAddress;
+        if(!config.restrictAccess) {
+          return next();
+        }else {
+          var ip = req.socket.remoteAddress;
+          console.log(ip + " requested " + req.url);
 
-        if(ip == null || config.allowedAddresses.indexOf(ip) == -1) {
-            console.log("Access denied from remote IP " + ip);
-            return next(new Error("Your IP address is not allowed to access this resource."));
+          if(ip == null || config.allowedAddresses.indexOf(ip) == -1) {
+              console.log("Access denied from remote IP " + ip);
+              return next(new Error("Your IP address is not allowed to access this resource."));
+          }
+          next();
         }
-        next();
     });
 });
 
@@ -69,41 +72,51 @@ systemsList.forEach((name,index) => { systemsList[index] = name.replace(".handle
 
 
 // context variables to be used in page routing
-var responseContext = {
-  sysName: '',
-  systems: systemsList,
-  sheetContext: {
-    statsList: []
-  }
-};
-
 var listStats = {
   soa: [{statName:"Mighty",debilityName:"Weakened"},{statName:"Agile",debilityName:"Shaky"},{statName:"Versed",debilityName:"Addled"},{statName:"Cunning",debilityName:"Confused"},{statName:"Spirited",debilityName:"Broken"}],
   dnd: []
 };
 
+class contextBlock {
+  systems = systemsList;
+  sysName;
+  charID;
+  // sheet context
+  sheetContext = {
+    basicProperties: [{name:"Age"}, {name:"Height"}, {name:"Weight"}],
+    statsList: []
+  };
+
+  constructor(sys,id) {
+    if (sys) {
+      this.sysName = sys;
+      this.charID = id;
+      this.layout = "system";
+      this.sheetContext['statsList'] = listStats[sys];
+    }
+  }
+
+  rawify() {
+    this.raw = JSON.stringify(this,undefined,4);
+  }
+}
+
 // routing for home page using regex to catch possible home path variations
 app.get('/:homePath(home|index|index.html)?', function(req, res) {
-  console.log(req.socket.remoteAddress);
+  var responseContext = new contextBlock;
   res.status(200).render('home', responseContext);
 });
 
 // routing for systems pages
 app.get('/systems/:sys', function(req, res) {
   var sys = req.params.sys;
+  var responseContext = new contextBlock(sys);
   if (systemsList.includes(sys)) {
-    // modify context
-    responseContext['sheetContext']['statsList'] = listStats[sys];
-    responseContext['sheetContext']['basicProperties'] = [{name:"Age"}, {name:"Height"}, {name:"Weight"}];
-    responseContext['layout'] = 'system';
-    responseContext['sysName'] = sys;
-    
     // debug
-    responseContext['raw'] = JSON.stringify(responseContext['sheetContext'],undefined,4);
+    responseContext.rawify();
 
     // send response
     res.status(200).render(path.join('systems',sys), responseContext);
-    delete responseContext.layout;
   }else {
     res.status(404).render('404', responseContext);
   }
@@ -113,6 +126,8 @@ app.get('/systems/:sys', function(req, res) {
 app.get('/character/:sys/:charid', function(req, res) {
   var sys = req.params.sys;
   var id = req.params.charid;
+  var responseContext = new contextBlock(sys,id);
+
   if (systemsList.includes(sys)) {
     console.log('SELECT * FROM '+sys+'_characters WHERE id='+id);
     connection.query('SELECT * FROM '+sys+'_characters WHERE id='+id, (err, rows, fields) => {
@@ -122,17 +137,11 @@ app.get('/character/:sys/:charid', function(req, res) {
         console.log(rows);
         // modify context
         Object.keys(rows[0]).forEach(key => {
-          responseContext['sheetContext'][key] = rows[0][key];
+          responseContext.sheetContext[key] = rows[0][key];
         });
-        responseContext['sheetContext']['statsList'] = listStats[sys];
-        responseContext['sheetContext']['basicProperties'] = [{name:"Age"}, {name:"Height"}, {name:"Weight"}];
-        responseContext['layout'] = 'system';
-        responseContext['sysName'] = sys;
-        responseContext['charID'] = id;
 
         // send response
         res.status(200).render(path.join('systems',sys), responseContext);
-        delete responseContext.layout;
       }
     })
   }else {
@@ -161,7 +170,7 @@ app.post('/database', function(req, res) {
 })
 
 // routing for 404 error page
-app.use((req, res) => {res.status(404).render('404', responseContext)});
+app.use((req, res) => {res.status(404).render('404', new contextBlock)});
 
 // server creation
 app.listen(port, function () {
