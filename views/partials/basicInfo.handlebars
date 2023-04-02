@@ -2,13 +2,13 @@
     <input id="name-input" placeholder="Name" name="name" value="{{name}}"/>
     <div id="main-info">
         <div id="character-img-container">
-            <img id="character-img" src="{{image}}"/>
+            <img id="character-img" src="{{image_url}}"/>
             <button id="character-img-edit-button" type="button">✎</button>
         </div>
         
         <div id="character-properties-container">
             <ul id="basic-properties-list">
-                {{#each basicProperties}}
+                {{#each basic_properties}}
                     <li class="character-property">
                         <label>{{name}}</label>
                         <input id="{{name}}-input" name="{{name}}" value="{{value}}"/>

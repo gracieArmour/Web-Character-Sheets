@@ -15,6 +15,21 @@
     text-align: center;
 }
 
+input {
+    background-color: rgb(224, 224, 224);
+    border: black 1px solid;
+    border-radius: 3px;
+}
+
+select {
+    background-color: rgb(224, 224, 224);
+}
+
+textarea {
+    background-color: rgb(224, 224, 224);
+}
+
+
 /* big sections */
 #section-container {
     display: flex;
@@ -276,7 +291,20 @@
 
 /* Moves */
 .move-description {
-    width: 500px; 
+    width: 500px;
+}
+
+.move-entry label a {
+    font-weight: bold;
+}
+
+div.move-info {
+    margin: 5px;
+}
+
+div.entry-description {
+    margin: 5px;
+    height: fit-content;
 }
 
 .filter-container {
@@ -288,9 +316,26 @@
     margin: 5px;
 }
 
-/* Spells */
-.spell-description {
-    width: 500px; 
+/* move selector */
+#move-dropdown-container {
+    position: relative;
+}
+
+#move-dropdown {
+    position: absolute;
+    top: 20px;
+    width: 100%;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.move-list-entry {
+    margin: 3px 0;
+}
+
+.move-list-entry:hover {
+    cursor: pointer;
+    background-color: #474747;
 }
 
 

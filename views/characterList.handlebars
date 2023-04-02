@@ -1,0 +1,11 @@
+<div>this is the character page for {{sysName}}</div>
+
+{{#each sheetContext.charactersList}}
+    <div class="character-entry" data-id="{{id}}">
+        <image src="{{image}}"></image>
+        <a href="/character/{{../sysName}}/{{id}}">{{name}}</a>
+    </div>
+{{/each}}
+
+<!--additional file dependencies-->
+<link rel="stylesheet" href="/soa.css"/>

@@ -1,9 +1,6 @@
-<form class="entry move-entry" method="post">
-    <label>
-        <input name="move-name" placeholder="Name" value="{{name}}"/>
-    </label>
-    <div class="move-info entry-info">
-        <textarea class="entry-description" name="move-description" placeholder="Description">{{desc}}</textarea>
-        <input name="move-source" placeholder="Source" value="{{source}}"/>
+<form class="entry move-entry" method="post" data-moveid="{{id}}">
+    <label><a href="{{link}}">{{name}}</a></label>
+    <div class="entry-description">
+        {{description}}
     </div>
 </form>

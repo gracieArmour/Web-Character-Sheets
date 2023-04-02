@@ -61,7 +61,11 @@ setTimeout(function() {
   });
 
   connection.connect(function(err) {
-    if (err) throw err;
+    if (err) {
+      console.log(err);
+    }else {
+      console.log("Database Connected");
+    }
   });
 }, 4000);
 
@@ -90,9 +94,12 @@ class contextBlock {
   constructor(sys,id) {
     if (sys) {
       this.sysName = sys;
-      this.charID = id;
       this.layout = "system";
       this.sheetContext['statsList'] = listStats[sys];
+    }
+    if (id) {
+      this.charID = id;
+      this.sheetContext['basicProperties'] = [];
     }
   }
 
@@ -145,6 +152,35 @@ app.get('/systems/:sys', (req, res) => {
   }
 });
 
+// routing for character list page
+app.get('/load_characters/:sys', (req, res) => {
+  var sys = req.params.sys;
+  var responseContext = new contextBlock(sys);
+
+  if (systemsList.includes(sys)) {
+    console.log('SELECT * FROM '+sys+'_characters');
+    connection.query('SELECT * FROM '+sys+'_characters', (err, rows, fields) => {
+      if (err) {
+        console.log(err);
+      }else {
+        console.log(rows);
+        // modify context
+        var output = [];
+        rows.forEach(row => {
+          output.push({id: row.id,name: row.name,image: row.image_url});
+        });
+        responseContext.sheetContext['charactersList'] = output;
+
+        // send response
+        res.status(200).render('characterList', responseContext);
+      }
+    });
+  }else {
+    res.status(404).render('404', responseContext);
+  }
+});
+
+
 // routing for loaded character pages
 app.get('/character/:sys/:charid', (req, res) => {
   var sys = req.params.sys;
@@ -152,16 +188,64 @@ app.get('/character/:sys/:charid', (req, res) => {
   var responseContext = new contextBlock(sys,id);
 
   if (systemsList.includes(sys)) {
+    // grab character data
     console.log('SELECT * FROM '+sys+'_characters WHERE id='+id);
     connection.query('SELECT * FROM '+sys+'_characters WHERE id='+id, (err, rows, fields) => {
       if (err) {
         console.log(err);
       }else {
         console.log(rows);
+        // grab move list data
+        if (sys=="soa") {
+          connection.query('SELECT * FROM soa_moves', (moveErr, moveRows, moveFields) => {
+            if (moveErr) {
+              console.log(moveErr);
+            }else {
+              // create allMoves
+              var output = [];
+              moveRows.forEach(row => {
+                output.push({
+                  id: row.id,
+                  type: row.type,
+                  playbook: row.source,
+                  name: row.name
+                });
+              });
+              responseContext.sheetContext["allMoves"] = output;
+
+              // create move list for character
+              if (rows[0]['moves']) {
+                responseContext.sheetContext['moves'] = [];
+                JSON.parse(rows[0]["moves"]).forEach(move => {
+                  responseContext.sheetContext['moves'].push(moveRows.find(row => row.id==move));
+                });
+              }
+            }
+          });
+        }
         // modify context
-        Object.keys(rows[0]).forEach(key => {
-          responseContext.sheetContext[key] = rows[0][key];
-        });
+        if (sys=="soa") {
+          Object.keys(rows[0]).forEach(key => {
+            if (key=="id" || key=="user_id" || key=="moves") {
+              console.log(rows[0][key]);
+            }else if (key=="basic_properties" || key=="playbooks" || key=="equipment" || key=="moves") {
+              responseContext.sheetContext[key] = JSON.parse(rows[0][key]);
+            }else if (key.includes("stat") || key.includes("debility")) {
+              responseContext.sheetContext["statsList"].forEach(stat => {
+                if (stat.statName.toUpperCase()==key.split("_")[1].toUpperCase()) {
+                  stat['statValue'] = rows[0][key];
+                }else if (stat.debilityName.toUpperCase()==key.split("_")[1].toUpperCase()) {
+                  stat['debilityValue'] = rows[0][key];
+                }
+              });
+            }else {
+              responseContext.sheetContext[key] = rows[0][key];
+            }
+          });
+        }
+
+        // debug
+        responseContext.rawify();
 
         // send response
         res.status(200).render(path.join('systems',sys), responseContext);

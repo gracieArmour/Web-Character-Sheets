@@ -1,9 +1,10 @@
+console.log("soa js loaded");
+
 // get playbook data
 var playbookMoveData;
 async function getData() {
 	var playbookResponse = await fetch('/database/AllMoves', {method: 'POST'});
 	playbookMoveData = await playbookResponse.json();
-	console.log(playbookMoveData[3]);
 }
 getData();
 
@@ -57,11 +58,21 @@ document.getElementById("move-search").addEventListener("focusin", function () {
 });
 
 document.getElementById("move-search").addEventListener("focusout", function () {
-	moveListDropdown.classList.add("hidden");
+	setTimeout(function() {
+		moveListDropdown.classList.add("hidden");
+	}, 100);
+});
+
+[...document.getElementsByClassName("move-list-entry")].forEach(elem => {
+	elem.addEventListener("click", function() {
+		let newHTML = Handlebars.templates.soaMoveEntry(playbookMoveData[elem.dataset.moveid]);
+		var section = document.getElementById('move-list');
+		section.insertAdjacentHTML('beforeend', newHTML);
+	})
 });
 
 document.getElementById("add-move-button").addEventListener("click", function () {
-	let newHTML = Handlebars.templates.soaMoveEntry({});
+	let newHTML = Handlebars.templates.soaCustomMoveEntry({});
 	var section = document.getElementById('move-list');
 	section.insertAdjacentHTML('beforeend', newHTML);
 });
@@ -70,7 +81,7 @@ document.getElementById("add-move-button").addEventListener("click", function ()
 // dropdown logic
 function onpageFilter(item) {
 	var moveData = playbookMoveData[item.dataset.moveid];
-	var moveList = [...document.getElementsByClassName("move-entry")].map(elem => {elem.dataset.moveid});
+	var moveList = [...document.getElementsByClassName("move-entry")].map(elem => {return Number(elem.dataset.moveid)});
 	var invalid = false;
 	
 	// type selector
@@ -80,7 +91,7 @@ function onpageFilter(item) {
 	}
 
 	var selectedPlaybook = document.getElementById("move-playbook-selector").value;
-	if ((selectedPlaybook != "Any") && (moveData.playbook != selectedType)) {
+	if ((selectedPlaybook != "Any") && (moveData.source != selectedPlaybook)) {
 		invalid = true;
 	}
 
@@ -96,12 +107,12 @@ function rulesFilter(item) {
 	var classlessMode = !(document.getElementById("classless-toggle").checked);
 	var moveData = playbookMoveData[item.dataset.moveid];
 	var moveList = [...document.getElementsByClassName("move-entry")];
-	var playbookList = [...document.getElementsByClassName("playbook-entry")];
+	var playbookList = [...document.querySelectorAll(".playbook-entry label")];
 	var charLevel = document.getElementById("level-value").value;
 	var invalid = false;
 
 	// check if valid playbook
-	if ((playbookList.length > 0) && !(playbookList.map(elem => {elem.textContent}).includes(moveData.source)) && (moveData.source != "Custom")) {
+	if ((playbookList.length > 0) && !(playbookList.map(elem => {return elem.textContent}).includes(moveData.source)) && (moveData.source != "Custom")) {
 		invalid = true;
 	}
 
@@ -110,12 +121,12 @@ function rulesFilter(item) {
 		invalid = true;
 	}
 	
-	if (!(moveList.map(elem => {elem.dataset.moveid}).includes(moveData.prereq_move)) && (moveData.prereq_move != 0)) {
+	if (!(moveList.map(elem => {return elem.dataset.moveid}).includes(moveData.prereq_move)) && (moveData.prereq_move != 0)) {
 		invalid = true;
 	}
 
 	// check if second background available
-	var backgroundList = moveList.filter(move => {move.dataset.type == "Background"}).map(elem => {elem.dataset.moveid});
+	var backgroundList = moveList.filter(move => {move.dataset.type == "Background"}).map(elem => {return elem.dataset.moveid});
 	if ((backgroundList != []) && (moveData.type == "Background") && (charLevel < 6)) {
 		invalid = true;
 	}
@@ -167,8 +178,9 @@ function moveFilter() {
 	for (var i = 0; i < dropdownList.length; i++) {
 		if (onpageFilter(dropdownList[i]) || rulesFilter(dropdownList[i]) || textFilter(dropdownList[i],filterText)) {
 			dropdownList[i].style.display = "none";
+			// console.log(onpageFilter(dropdownList[i])+", "+rulesFilter(dropdownList[i])+", "+textFilter(dropdownList[i],filterText));
 		} else {
-			dropdownList[i].style.display = "";
+			dropdownList[i].style.display = "flex";
 		}
 	}
 }

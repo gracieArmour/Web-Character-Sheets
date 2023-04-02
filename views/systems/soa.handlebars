@@ -1,4 +1,4 @@
-<form id="character-sheet" method="post" data-charid="{{sheetContext.charid}}">
+<form id="character-sheet" method="post" data-charid="{{sheetContext.charID}}">
     {{> basicInfo sheetContext}}
 
     <div id="section-container">
@@ -17,7 +17,7 @@
                     <div id="playbook-list" class="list">
                         {{#each sheetContext.playbooks}}
                             <div class="playbook-entry">
-                                {{this}}
+                                <label>{{this}}</label>
                                 <button id="delete-playbook-button">x</button>
                             </div>
                         {{/each}}
@@ -40,18 +40,18 @@
             <div id="combat-section" class="container">
                 <div id="hp-container" class="combat-container">
                     <label>Hit Points</label>
-                    <input id="hp-display" class="big-number" value="{{currentHP}}">
-                    <input id="hp-slider" type="range" value="{{currentHP}}" min="0" max="{{maxHP}}" oninput="this.previousElementSibling.value = this.value">
+                    <input id="hp-display" class="big-number" value="{{sheetContext.current_hp}}" oninput="this.nextElementSibling.value = this.value">
+                    <input id="hp-slider" type="range" value="{{sheetContext.current_hp}}" min="0" max="{{sheetContext.max_hp}}" oninput="this.previousElementSibling.value = this.value">
                 </div>
 
                 <div id="armor-container" class="combat-container">
                     <label>Armor</label>
-                    <input id="armor-value" class="big-number" value="{{armor}}">
+                    <input id="armor-value" class="big-number" value="{{sheetContext.armor}}">
                 </div>
 
                 <div "damage-container" class="combat-container">
                     <label>Damage</label>
-                    <input id="damage-value" value="{{damage}}">
+                    <input id="damage-value" value="{{sheetContext.damage}}">
                 </div>
             </div>
 
@@ -78,18 +78,18 @@
                 <div id="move-filter-container" class="filter-container">
                     <div id="move-dropdown-container" class="move-filter dropdown-container">
                         <input id="move-search" class="search-bar dropdown-toggle" placeholder="search" onkeyup="moveFilter()">
-                        <ul id="move-dropdown" class="dropdown-list hidden">
+                        <div id="move-dropdown" class="dropdown-list hidden">
                             {{#each sheetContext.allMoves}}
-                                <li class="move-list-entry" data-moveid="{{id}}" data-type="{{type}}" data-playbook="{{playbook}}">{{name}}</li>
+                                <div class="move-list-entry" data-moveid="{{id}}" data-type="{{type}}" data-playbook="{{playbook}}">{{name}}</div>
                             {{/each}}
-                        </ul>
+                        </div>
                     </div>
 
                     <div id="move-type-selector-container" class="move-filter">
                         <label>Type</label>
                         <select id="move-type-selector">
                             <option value="Any">Any</option>
-                            {{#each moveTypes}}
+                            {{#each sheetContext.moveTypes}}
                                 <option value="{{this}}">{{this}}</option>
                             {{/each}}
                         </select>
@@ -111,7 +111,7 @@
                 </div>
                 <button class="add-button" id="add-move-button" type="button">New Move</button>
                 <div id="move-list" class="list">
-                    {{#each moves}}
+                    {{#each sheetContext.moves}}
                         {{> soaMoveEntry}}
                     {{/each}}
                 </div>
@@ -121,7 +121,7 @@
         <div id="right-container" class="split-section">
             <div id="notes-section">
                 <label><h2>Notes</h2></label>
-                <textarea id="character-notes"></textarea>
+                <textarea id="character-notes">{{sheetContext.notes}}</textarea>
             </div>
             <div id="debug-area">
                 <pre>{{raw}}</pre>
@@ -135,4 +135,4 @@
 <script src="/soa.js" defer></script>
 <script src="/soaEquipmentEntry.js" defer></script>
 <script src="/soaMoveEntry.js" defer></script>
-<script src="/soaMoveListEntry.js" defer></script>
+<script src="/soaCustomMoveEntry.js" defer></script>

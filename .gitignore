@@ -3,4 +3,4 @@ node_modules/
 basicPropertyEntry.js
 soaEquipmentEntry.js
 soaMoveEntry.js
-soaMoveListEntry.js
+soaCustomMoveEntry.js
