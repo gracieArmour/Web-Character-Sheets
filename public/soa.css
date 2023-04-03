@@ -289,6 +289,30 @@ textarea {
     width: 30px;
 }
 
+/* equipment selector */
+#equipment-dropdown-container {
+    position: relative;
+}
+
+#equipment-dropdown {
+    position: absolute;
+    z-index: 2;
+    top: 20px;
+    width: 100%;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.equipment-list-entry {
+    margin: 3px 0;
+}
+
+.equipment-list-entry:hover {
+    cursor: pointer;
+    background-color: #474747;
+}
+
+
 /* Moves */
 .move-description {
     width: 500px;

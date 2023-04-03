@@ -1,10 +1,15 @@
 console.log("soa js loaded");
 
 // get playbook data
-var playbookMoveData;
+var playbookMoveData, allEquipmentData;
 async function getData() {
+	// moves
 	var playbookResponse = await fetch('/database/AllMoves', {method: 'POST'});
 	playbookMoveData = await playbookResponse.json();
+
+	// equipment
+	var equipmentResponse = await fetch('/database/AllEquipment', {method: 'POST'});
+	allEquipmentData = await equipmentResponse.json();
 }
 getData();
 
@@ -13,12 +18,6 @@ var simplemde = new SimpleMDE({ element: document.getElementById("character-note
 
 
 // listeners
-document.getElementById("add-equipment-button").addEventListener("click", function () {
-	let newHTML = Handlebars.templates.soaEquipmentEntry({});
-	var section = document.getElementById('equipment-list');
-	section.insertAdjacentHTML('beforeend', newHTML);
-});
-
 document.getElementById("add-basic-property-button").addEventListener("click", function () {
 	let newHTML = Handlebars.templates.basicPropertyEntry({});
 	var section = document.getElementById('basic-properties-list');
@@ -46,7 +45,23 @@ document.getElementById("equipment-search").addEventListener("focusin", function
 });
 
 document.getElementById("equipment-search").addEventListener("focusout", function () {
-	equipmentListDropdown.classList.add("hidden");
+	setTimeout(function() {
+		equipmentListDropdown.classList.add("hidden");
+	}, 100);
+});
+
+[...document.getElementsByClassName("equipment-list-entry")].forEach(elem => {
+	elem.addEventListener("click", function() {
+		let newHTML = Handlebars.templates.soaEquipmentEntry(allEquipmentData[elem.dataset.equipmentid]);
+		var section = document.getElementById('equipment-list');
+		section.insertAdjacentHTML('beforeend', newHTML);
+	})
+});
+
+document.getElementById("add-equipment-button").addEventListener("click", function () {
+	let newHTML = Handlebars.templates.soaCustomEquipmentEntry({});
+	var section = document.getElementById('equipment-list');
+	section.insertAdjacentHTML('beforeend', newHTML);
 });
 
 // move search listeners

@@ -1,7 +1,9 @@
 <form class="entry item-entry" method="post">
-    <label><a href="{{link}}">{{name}}</a></label>
+    <label>
+        <input name="item-name" placeholder="Name" value="{{name}}"/>
+    </label>
     <div class="item-info entry-info">
-        <div class="entry-description">{{description}}</div>
+        <textarea class="entry-description" name="item-description" placeholder="Description">{{desc}}</textarea>
         <div class="item-uses">
             <label>Uses</label>
             <input type="number" class="big-number" name="item-amount" value="{{uses}}"/>

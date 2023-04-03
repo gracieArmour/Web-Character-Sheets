@@ -59,11 +59,11 @@
                 <label>Equipment</label>
                 <div id="equipment-dropdown-container" class="dropdown-container">
                         <input id="equipment-search" class="search-bar dropdown-toggle" placeholder="search" onkeyup="equipmentFilter()">
-                        <ul id="equipment-dropdown" class="equipment-list hidden">
+                        <div id="equipment-dropdown" class="dropdown-list hidden">
                             {{#each sheetContext.allEquipment}}
-                                <li class="equipment-list-entry">{{this}}</li>
+                                <div class="equipment-list-entry" data-equipmentid="{{id}}" data-type="{{type}}" data-custom="{{is_cutom}}">{{name}}</div>
                             {{/each}}
-                        </ul>
+                        </div>
                     </div>
                 <button class="add-button" id="add-equipment-button" type="button">Add Item</button>
                 <div id="equipment-list" class="list">
@@ -134,5 +134,6 @@
 <link rel="stylesheet" href="/soa.css"/>
 <script src="/soa.js" defer></script>
 <script src="/soaEquipmentEntry.js" defer></script>
+<script src="/soaCustomEquipmentEntry.js" defer></script>
 <script src="/soaMoveEntry.js" defer></script>
 <script src="/soaCustomMoveEntry.js" defer></script>
