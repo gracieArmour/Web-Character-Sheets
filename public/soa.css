@@ -43,7 +43,7 @@ textarea {
 
 
 /* basic info */
-#main-info-form {
+#main-info-container {
     display: flex;
     flex-direction: column;
 }
@@ -110,38 +110,56 @@ textarea {
     text-align: right;
 }
 
+
+/* Playbooks */
+#playbook-list {
+    padding-left: 10px;
+    padding-top: 5px;
+}
+
+.playbook-entry {
+    display: flex;
+    flex-direction: row;
+    margin: 3px 0;
+}
+
+.delete-playbook-button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    width: 15px;
+    height: 15px;
+    margin-left: 10px;
+    border-radius: 4px;
+    border: none;
+}
+
+.delete-playbook-button:hover {
+    background-color: red;
+    color: white;
+    cursor: pointer;
+}
+
 /* Level */
 #level-container {
-    margin: 5px;
-    padding: 5px;
-    position: relative;
-    width: 80px;
+    display: flex;
     flex-direction: column;
     align-items: center;
+    margin: 5px;
+    padding: 5px;
+    width: 80px;
 }
 
 #level-container label {
     height: fit-content;
     text-align: center;
-    padding-right: 10px;
-}
-
-#modify-level-button {
-    position: absolute;
-    top: 5px;
-    right: 5px;
-    width: 20px;
-    height: 20px;
-    padding: 0;
-    text-align: center;
-    border-radius: 50%;
 }
 
 #level-value {
-    display: block;
-    top: 60%;
-    text-align: center;
-    padding-right: 10px;
+    margin-top: 5px;
+    width: 25px;
+    height: 25px;
 }
 
 /* Stats */
@@ -151,26 +169,10 @@ textarea {
     padding: 5px;
     width: 90px;
     border-radius: 5px;
-    position: relative;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: space-around;
-}
-
-.stat-container label {
-    margin-right: 15px;
-}
-
-.modify-stat-button {
-    position: absolute;
-    top: 5px;
-    right: 5px;
-    width: 20px;
-    height: 20px;
-    padding: 0;
-    text-align: center;
-    border-radius: 50%;
 }
 
 .debility-label {
@@ -217,7 +219,9 @@ textarea {
 
 /* Damage */
 #damage-value {
-    width: 65px;
+    margin-bottom: 10px;
+    width: 25px;
+    height: 25px;
 }
 
 
@@ -260,6 +264,29 @@ textarea {
 }
 
 /* Equipment */
+.item-name-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.delete-equipment-button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    width: 15px;
+    height: 15px;
+    border-radius: 4px;
+    border: none;
+}
+
+.delete-equipment-button:hover {
+    background-color: red;
+    color: white;
+    cursor: pointer;
+}
+
 .item-info {
     display:flex;
     flex-direction: row;
@@ -279,7 +306,7 @@ textarea {
 }
 
 .item-info .entry-description {
-    width: 150px;
+    width: 500px;
     height: auto;
 }
 
@@ -318,8 +345,31 @@ textarea {
     width: 500px;
 }
 
+.move-name-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
 .move-entry label a {
     font-weight: bold;
+}
+
+.delete-move-button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    width: 15px;
+    height: 15px;
+    border-radius: 4px;
+    border: none;
+}
+
+.delete-move-button:hover {
+    background-color: red;
+    color: white;
+    cursor: pointer;
 }
 
 div.move-info {
@@ -364,3 +414,31 @@ div.entry-description {
 
 
 /* Notes */
+
+
+
+/* Character List */
+#character-list {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 100%;
+    margin-top: 20px;
+}
+
+.character-entry {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    background-color: #333333;
+    border-radius: 5px;
+}
+
+.character-entry img {
+    margin: 10px;
+    max-height: 150px;
+}
+
+.character-entry a {
+    margin: 10px;
+}

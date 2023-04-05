@@ -1,8 +1,8 @@
-<form id="main-info-form" method="post">
-    <input id="name-input" placeholder="Name" name="name" value="{{name}}"/>
+<div id="main-info-container">
+    <input id="name-input" class="savable" placeholder="Name" name="name" value="{{name}}"/>
     <div id="main-info">
         <div id="character-img-container">
-            <img id="character-img" src="{{image_url}}"/>
+            <img id="character-img" class="savable save-img" name="image_url" src="{{image_url}}"/>
             <button id="character-img-edit-button" type="button">✎</button>
         </div>
         
@@ -11,11 +11,11 @@
                 {{#each basic_properties}}
                     <li class="character-property">
                         <label>{{name}}</label>
-                        <input id="{{name}}-input" name="{{name}}" value="{{value}}"/>
+                        <input id="{{name}}-input" class="savable save-bProps" name="{{name}}" value="{{value}}"/>
                     </li>
                 {{/each}}
             </ul>
             <button class="add-button" id="add-basic-property-button" type="button">Add Property</button>
         </div>
     </div>
-</form>
+</div>

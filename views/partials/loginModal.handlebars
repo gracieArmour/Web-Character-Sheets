@@ -1,5 +1,21 @@
-<div class="modal-background">
+<div id="login-modal-container" class="modal-background hidden">
     <div id="login-modal">
-        
+        <button id="close-login">X</button>
+        <h2>Login or Create Account</h2>
+        <div id="login-message"></div>
+        <div class="login-input-container">
+            <label>Username</label>
+            <input id="login-username" class="login-input" type="username" name="username" placeholder="username" value="">
+        </div>
+        <div class="login-input-container">
+            <label>Password</label>
+            <input id="login-password" class="login-input" type="password" name="password" placeholder="password" value="">
+        </div>
+
+        <div id="login-submit-container">
+            <button id="login-button" class="login-submit">Login</button>
+            OR
+            <button id="signup-button" class="login-submit">Create Account</button>
+        </div>
     </div>
 </div>

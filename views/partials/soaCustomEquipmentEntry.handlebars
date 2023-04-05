@@ -1,7 +1,10 @@
-<form class="entry item-entry" method="post">
-    <label>
-        <input name="item-name" placeholder="Name" value="{{name}}"/>
-    </label>
+<div class="entry item-entry savable save-customEquips">
+    <div class="item-name-container">
+        <label>
+            <input name="item-name" placeholder="Name" value="{{name}}"/>
+        </label>
+        <button class="delete-equipment-button">x</button>
+    </div>
     <div class="item-info entry-info">
         <textarea class="entry-description" name="item-description" placeholder="Description">{{desc}}</textarea>
         <div class="item-uses">
@@ -9,4 +12,4 @@
             <input type="number" class="big-number" name="item-amount" value="{{uses}}"/>
         </div>
     </div>
-</form>
+</div>

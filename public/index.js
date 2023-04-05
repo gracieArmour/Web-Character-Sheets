@@ -1,5 +1,7 @@
 console.log("client-side js loaded");
 
+
+// nav listeners
 var navToggles = [...document.getElementsByClassName("dropdown-toggle")];
 var navDropdowns = [...document.querySelectorAll(".nav-button ul")];
 
@@ -14,3 +16,53 @@ function toggleNavDropdown(thisButton) {
 navToggles.forEach(button => {
     button.addEventListener('click', toggleNavDropdown.bind(this,button));
 })
+
+document.getElementById("login-toggle").addEventListener("click", function () {
+    document.getElementById("login-modal-container").classList.remove("hidden");
+})
+
+
+// login system
+document.getElementById("close-login").addEventListener("click", function() {
+    document.getElementById("login-modal-container").classList.add("hidden");
+})
+
+async function sendLogin(type) {
+    var usernameField = document.getElementById("login-username");
+    var passwordField = document.getElementById("login-password");
+    var o = {username: usernameField.value, password: passwordField.value};
+    var loginResponse = await fetch('/auth/'+type, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(o)
+    });
+    var loginReply = await loginResponse.text();
+
+    if (loginReply=="Account created" || loginReply=="Logged in") {
+        document.getElementById("login-modal-container").classList.add("hidden");
+    }else {
+        document.getElementById("login-message").textContent = loginReply;
+    }
+    console.log(loginReply);
+}
+
+
+document.getElementById("login-button").addEventListener("click", function() {
+    sendLogin('login');
+})
+
+document.getElementById("signup-button").addEventListener("click", function() {
+    sendLogin('signup');
+})
+
+
+// share system toggles
+document.getElementById("share-modal-toggle").addEventListener("click", function() {
+    document.getElementById("share-modal-container").classList.remove("hidden");
+});
+
+document.getElementById("close-share").addEventListener("click", function() {
+    document.getElementById("share-modal-container").classList.add("hidden");
+});

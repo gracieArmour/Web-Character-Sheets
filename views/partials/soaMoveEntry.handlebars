@@ -1,6 +1,9 @@
-<form class="entry move-entry" method="post" data-moveid="{{id}}">
-    <label><a href="{{link}}">{{name}}</a></label>
+<div class="entry move-entry savable save-moves" data-moveid="{{id}}">
+    <div class="item-name-container">
+        <label><a href="{{link}}">{{name}}</a></label>
+        <button class="delete-move-button">x</button>
+    </div>
     <div class="entry-description">
         {{description}}
     </div>
-</form>
+</div>

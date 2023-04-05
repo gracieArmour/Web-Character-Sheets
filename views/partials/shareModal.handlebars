@@ -1,0 +1,24 @@
+<div id="share-modal-container" class="modal-background hidden">
+    <div id="share-modal">
+        <button id="close-share">X</button>
+        <h2>Share Character With Others</h2>
+        <div id="share-message"></div>
+        <div id="share-input-container">
+            <label>Username of Recipient</label>
+            <input id="share-username" class="share-input" name="username" placeholder="username" value="">
+        </div>
+        <div id="share-list-container">
+            <label>Current Users</label>
+            <ul id="share-list">
+                {{#each users}}
+                    <li class="shared-entry">
+                        <label>{{this}}</label>
+                        <button class="delete-user-button">x</button>
+                    </li>
+                {{/each}}
+            </ul>
+        </div>
+
+        <button id="share-modal-button" class="share-submit">Update</button>
+    </div>
+</div>

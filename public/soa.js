@@ -24,6 +24,24 @@ document.getElementById("add-basic-property-button").addEventListener("click", f
 	section.insertAdjacentHTML('beforeend', newHTML);
 });
 
+[...document.getElementsByClassName("delete-playbook-button")].forEach(elem => {
+	elem.addEventListener("click", (event) => {
+		event.target.closest(".playbook-entry").remove();
+	})
+});
+
+[...document.getElementsByClassName("delete-equipment-button")].forEach(elem => {
+	elem.addEventListener("click", (event) => {
+		event.target.closest(".item-entry").remove();
+	})
+});
+
+[...document.getElementsByClassName("delete-move-button")].forEach(elem => {
+	elem.addEventListener("click", (event) => {
+		event.target.closest(".move-entry").remove();
+	})
+});
+
 // playbook search listeners
 var playbookListDropdown = document.getElementById("playbook-dropdown");
 
@@ -41,7 +59,7 @@ var equipmentListDropdown = document.getElementById("equipment-dropdown");
 
 document.getElementById("equipment-search").addEventListener("focusin", function () {
 	equipmentListDropdown.classList.remove("hidden");
-	moveFilter();
+	equipmentFilter();
 });
 
 document.getElementById("equipment-search").addEventListener("focusout", function () {
@@ -199,6 +217,57 @@ function moveFilter() {
 		}
 	}
 }
+
+
+// share logic
+[...document.getElementsByClassName("delete-user-button")].forEach(elem => {
+	elem.addEventListener("click", (event) => {
+		event.target.closest(".shared-entry").remove();
+	})
+});
+
+async function sendShare() {
+	var shareUser = document.getElementById("share-username");
+	var existingUsers = [...document.querySelectorAll(".shared-entry label")];
+	var characterSheet = document.getElementById("character-sheet");
+    var o = {newUser: shareUser.value, existingUsers: existingUsers.map(elem => elem.textContent)};
+	console.log('/share_character/soa/'+characterSheet.dataset.charid);
+    var shareResponse = await fetch('/share_character/soa/'+characterSheet.dataset.charid, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(o)
+    });
+    var shareReply = await shareResponse.text();
+
+    if (shareReply=="Shared successfully") {
+        document.getElementById("share-modal-container").classList.add("hidden");
+    }else {
+        document.getElementById("share-message").textContent = shareReply;
+    }
+    console.log(shareReply);
+}
+
+
+document.getElementById("share-modal-button").addEventListener("click", sendShare);
+
+
+// save logic
+var submitButton = document.getElementById("saveButton");
+
+submitButton.addEventListener('click', function() {
+	var o = {};
+	var savables = [...document.getElementsByClassName("savable")];
+	savables.forEach(elem => {
+		if (elem.classList.includes("save-img")) {
+			o[elem.name] = elem.src;
+		}else if (elem) {
+
+		}
+	})
+});
+
 
 // var formElem = document.getElementById("character-sheet");
 // var submitButton = document.getElementById("saveButton");

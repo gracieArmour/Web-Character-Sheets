@@ -5,6 +5,7 @@
 // dependencies
 require('dotenv').config();
 const express = require('express');
+const session = require('express-session');
 const exhandle = require('express-handlebars');
 const mysql = require('mysql');
 const fs = require('fs');
@@ -276,9 +277,11 @@ app.get('/character/:sys/:charid', (req, res) => {
           // modify context
           if (sys=="soa") {
             Object.keys(rows[0]).forEach(key => {
-              if (key=="id" || key=="user_id" || key=="moves" || key=="equipment") {
+              if (key=="id") {
+                responseContext.sheetContext['charID'] = rows[0][key];
+              }else if (key=="moves" || key=="equipment") {
                 // console.log(rows[0][key]);
-              }else if (key=="basic_properties" || key=="playbooks") {
+              }else if (key=="users" || key=="basic_properties" || key=="playbooks") {
                 responseContext.sheetContext[key] = JSON.parse(rows[0][key]);
               }else if (key.includes("stat") || key.includes("debility")) {
                 responseContext.sheetContext["statsList"].forEach(stat => {
@@ -307,28 +310,92 @@ app.get('/character/:sys/:charid', (req, res) => {
 });
 
 // authenticate login
-app.post('/auth', (req, res) => {
-  var username = request.body.username;
-  var password = request.body.password;
+app.post('/auth/:loginType', express.json(), (req, res) => {
+  var type = req.params.loginType;
+  console.log(req.body);
+  var username = req.body.username;
+  var password = req.body.password;
 
   if (username && password) {
-    connection.query('SELECT * FROM user_accounts WHERE username= ? AND password = ?', [username,password], (err,rows,fields) => {
+    connection.query('SELECT * FROM user_accounts WHERE username="'+username+'"', (err,rows,fields) => {
       if (err) {
         console.log(err);
       }else {
         if (rows.length > 0) {
-          request.session.loggedin = true;
-          request.session.username = username;
-          res.send('logged in');
+          if (type=="login") {
+            if (rows[0]['password']==password) {
+              req.session.loggedin = true;
+              req.session.username = username;
+              res.send('Logged in');
+            }else {
+              res.send('Incorrect password');
+            }
+          }else {
+            res.send('Username not available');
+          }
         }else {
-          res.send('Incorrect username or password');
+          if (type=="login") {
+            res.send('Username does not exist');
+          }else {
+            connection.query('INSERT INTO user_accounts (username, password) VALUES (\"'+username+'\", \"'+password+'\")', (insertErr, insertRows, insertFields) => {
+              if (err) {
+                console.log(err);
+              }else {
+                req.session.loggedin = true;
+                req.session.username = username;
+                res.send('Account created');
+              }
+            })
+          }
         }
       }
     })
   }else {
     res.send('Must fill out both fields');
   }
-  res.end();
+});
+
+// share character
+app.post('/share_character/:sys/:id', express.json(), (req,res) => {
+  var sys = req.params.sys;
+  var id = req.params.id;
+  var newUser = req.body.newUser;
+  var existingUsers = req.body.existingUsers;
+
+  if (newUser) {
+    connection.query('SELECT * FROM user_accounts WHERE username="'+newUser+'"', (err,rows,fields) => {
+      if (err) {
+        console.log(err);
+      }else {
+        if (rows.length > 0) {
+          existingUsers.push(newUser);
+          if (!(existingUsers.includes(req.session.username))) {
+            existingUsers.push(req.session.username);
+          }
+          connection.query('UPDATE '+sys+'_characters SET users=\''+JSON.stringify(existingUsers)+'\' WHERE id='+id, (err,rows,fields) => {
+            if (err) {
+              console.log(err);
+            }else {
+              res.send('Shared successfully');
+            }
+          });
+        }else {
+          res.send('Account does not exist, username may be misspelled');
+        }
+      }
+    });
+  }else {
+    if (!(existingUsers.includes(req.session.username))) {
+      existingUsers.push(req.session.username);
+    }
+    connection.query('UPDATE '+sys+'_characters SET users=\''+JSON.stringify(existingUsers)+'\' WHERE id='+id, (err,rows,fields) => {
+      if (err) {
+        console.log(err);
+      }else {
+        res.send('Shared successfully');
+      }
+    });
+  }
 });
 
 // catch form data

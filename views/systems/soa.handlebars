@@ -1,4 +1,4 @@
-<form id="character-sheet" method="post" data-charid="{{sheetContext.charID}}">
+<div id="character-sheet" data-charid="{{sheetContext.charID}}">
     {{> basicInfo sheetContext}}
 
     <div id="section-container">
@@ -16,9 +16,9 @@
                     </div>
                     <div id="playbook-list" class="list">
                         {{#each sheetContext.playbooks}}
-                            <div class="playbook-entry">
+                            <div class="playbook-entry savable save-playbooks">
                                 <label>{{this}}</label>
-                                <button id="delete-playbook-button">x</button>
+                                <button class="delete-playbook-button">x</button>
                             </div>
                         {{/each}}
                     </div>
@@ -26,8 +26,7 @@
 
                 <div id="level-container">
                     <label>Level</label>
-                    <button id="modify-level-button">+</button>
-                    <div id="level-value" class="big-number">0</div>
+                    <input id="level-value" class="big-number savable" name="level" value="{{sheetContext.level}}">
                 </div>
             </div>
 
@@ -38,7 +37,7 @@
             </div>
 
             <div id="combat-section" class="container">
-                <div id="hp-container" class="combat-container">
+                <div id="hp-container" class="combat-container savable save-hp">
                     <label>Hit Points</label>
                     <input id="hp-display" class="big-number" value="{{sheetContext.current_hp}}" oninput="this.nextElementSibling.value = this.value">
                     <input id="hp-slider" type="range" value="{{sheetContext.current_hp}}" min="0" max="{{sheetContext.max_hp}}" oninput="this.previousElementSibling.value = this.value">
@@ -46,12 +45,12 @@
 
                 <div id="armor-container" class="combat-container">
                     <label>Armor</label>
-                    <input id="armor-value" class="big-number" value="{{sheetContext.armor}}">
+                    <input id="armor-value" class="big-number savable" name="armor" value="{{sheetContext.armor}}">
                 </div>
 
                 <div "damage-container" class="combat-container">
                     <label>Damage</label>
-                    <input id="damage-value" value="{{sheetContext.damage}}">
+                    <input id="damage-value" class="big-number savable" name="damage" value="{{sheetContext.damage}}">
                 </div>
             </div>
 
@@ -72,7 +71,9 @@
                     {{/each}}
                 </div>
             </div>
+        </div>
 
+        <div id="right-container" class="split-section">
             <div id="moves-section" class="container  list-section">
                 <label>Moves</label>
                 <div id="move-filter-container" class="filter-container">
@@ -117,18 +118,17 @@
                 </div>
             </div>
         </div>
-
-        <div id="right-container" class="split-section">
-            <div id="notes-section">
-                <label><h2>Notes</h2></label>
-                <textarea id="character-notes">{{sheetContext.notes}}</textarea>
-            </div>
-            <div id="debug-area">
-                <pre>{{raw}}</pre>
-            </div>
-        </div>
     </div>
-</form>
+    <div id="notes-section">
+        <label><h2>Notes</h2></label>
+        <textarea id="character-notes">{{sheetContext.notes}}</textarea>
+    </div>
+    <div id="debug-area">
+        <pre>{{raw}}</pre>
+    </div>
+</div>
+
+{{> shareModal sheetContext}}
 
 <!--additional file dependencies-->
 <link rel="stylesheet" href="/soa.css"/>
