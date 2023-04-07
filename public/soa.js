@@ -254,19 +254,25 @@ document.getElementById("share-modal-button").addEventListener("click", sendShar
 
 
 // save logic
-var submitButton = document.getElementById("saveButton");
+// var submitButton = document.getElementById("saveButton");
 
-submitButton.addEventListener('click', function() {
-	var o = {};
-	var savables = [...document.getElementsByClassName("savable")];
-	savables.forEach(elem => {
-		if (elem.classList.includes("save-img")) {
-			o[elem.name] = elem.src;
-		}else if (elem) {
+// submitButton.addEventListener('click', function() {
+// 	var o = {};
+// 	var savables = [...document.getElementsByClassName("savable")];
+// 	var basicProperties = [];
 
-		}
-	})
-});
+// 	savables.forEach(elem => {
+// 		if (elem.classList.includes("save-img")) {
+// 			o[elem.name] = elem.src;
+// 		}else if (elem.classList.includes("save-bProps")) {
+// 			basicProperties.push({name:elem.name,value:elem.value});
+// 		}else if (elem.classList.includes("save-customProps")) {
+// 			basicProperties.push({name: elem.("name").value, value: elem.childNodes.item("value").value});
+// 		}else if (elem.classList.includes("save-playbooks")) {
+
+// 		}
+// 	})
+// });
 
 
 // var formElem = document.getElementById("character-sheet");

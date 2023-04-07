@@ -117,6 +117,46 @@ class contextBlock {
   }
 }
 
+function soaGetListData(context) {
+  // get moves
+  connection.query('SELECT * FROM soa_moves', (err, rows, fields) => {
+    if (err) {
+      console.log(err);
+    }else {
+      // create allMoves
+      context.sheetContext["allMoves"] = [];
+      rows.forEach(row => {
+        context.sheetContext["allMoves"].push({
+          id: row.id,
+          type: row.type,
+          playbook: row.source,
+          name: row.name
+        });
+      });
+    }
+  });
+
+  // get equipment
+  connection.query('SELECT * FROM soa_equipment', (err, rows, fields) => {
+    if (err) {
+      console.log(err);
+    }else {
+      // create allEquipment
+      context.sheetContext["allEquipment"] = [];
+      rows.forEach(row => {
+        context.sheetContext["allEquipment"].push({
+          id: row.id,
+          type: row.type,
+          custom: row.is_custom,
+          name: row.name
+        });
+      });
+    }
+  });
+
+  console.log(context.rawify());
+}
+
 // routing for home page using regex to catch possible home path variations
 app.get('/:homePath(home|index|index.html)?', (req, res) => {res.status(200).render('home', new contextBlock)});
 
@@ -126,49 +166,11 @@ app.get('/systems/:sys', (req, res) => {
   var responseContext = new contextBlock(sys);
   if (systemsList.includes(sys)) {
     if (sys=="soa") {
-      // get moves
-      connection.query('SELECT * FROM soa_moves', (err, rows, fields) => {
-        if (err) {
-          console.log(err);
-        }else {
-          responseContext.sheetContext["allMoves"] = [];
-          rows.forEach(row => {
-            responseContext.sheetContext["allMoves"].push({
-              id: row.id,
-              type: row.type,
-              playbook: row.source,
-              name: row.name
-            });
-          });
-        }
-      });
-
-      // get equipment
-      connection.query('SELECT * FROM soa_equipment', (equipmentErr, equipmentRows, equipmentFields) => {
-        if (equipmentErr) {
-          console.log(equipmentErr);
-        }else {
-          // create allEquipment
-          responseContext.sheetContext["allEquipment"] = [];
-          equipmentRows.forEach(row => {
-            responseContext.sheetContext["allEquipment"].push({
-              id: row.id,
-              type: row.type,
-              custom: row.is_custom,
-              name: row.name
-            });
-          });
-        }
-
-        // send response
-        res.status(200).render(path.join('systems',sys), responseContext.rawify());
-      });
-    }else {
-
-      // send response
-      res.status(200).render(path.join('systems',sys), responseContext.rawify());
+      soaGetListData(responseContext);
     }
-  
+
+    // send response
+    res.status(200).render(path.join('systems',sys), responseContext.rawify());
   }else {
     res.status(404).render('404', responseContext);
   }
@@ -220,62 +222,10 @@ app.get('/character/:sys/:charid', (req, res) => {
         if (JSON.parse(rows[0]['users']).includes(req.session.username)) {
           // grab list data
           if (sys=="soa") {
-            // get moves
-            connection.query('SELECT * FROM soa_moves', (moveErr, moveRows, moveFields) => {
-              if (moveErr) {
-                console.log(moveErr);
-              }else {
-                // create allMoves
-                responseContext.sheetContext["allMoves"] = [];
-                moveRows.forEach(row => {
-                  responseContext.sheetContext["allMoves"].push({
-                    id: row.id,
-                    type: row.type,
-                    playbook: row.source,
-                    name: row.name
-                  });
-                });
+            soaGetListData(responseContext);
+            console.log(responseContext.rawify());
 
-                // create move list for character
-                if (rows[0]['moves']) {
-                  responseContext.sheetContext['moves'] = [];
-                  JSON.parse(rows[0]["moves"]).forEach(move => {
-                    responseContext.sheetContext['moves'].push(moveRows.find(row => row.id==move));
-                  });
-                }
-              }
-            });
-
-            // get equipment
-            connection.query('SELECT * FROM soa_equipment', (equipmentErr, equipmentRows, equipmentFields) => {
-              if (equipmentErr) {
-                console.log(equipmentErr);
-              }else {
-                // create allEquipment
-                responseContext.sheetContext["allEquipment"] = [];
-                equipmentRows.forEach(row => {
-                  responseContext.sheetContext["allEquipment"].push({
-                    id: row.id,
-                    type: row.type,
-                    custom: row.is_custom,
-                    name: row.name
-                  });
-                });
-
-                // create equipment list for character
-                if (rows[0]['equipment']) {
-                  responseContext.sheetContext['equipment'] = [];
-                  JSON.parse(rows[0]["equipment"]).forEach(item => {
-                    var itemObj = equipmentRows.find(row => row.id==item.id);
-                    itemObj.uses = item.uses;
-                    responseContext.sheetContext['equipment'].push(itemObj);
-                  });
-                }
-              }
-            });
-          }
-          // modify context
-          if (sys=="soa") {
+            // modify context
             Object.keys(rows[0]).forEach(key => {
               if (key=="id") {
                 responseContext.sheetContext['charID'] = rows[0][key];
@@ -295,6 +245,24 @@ app.get('/character/:sys/:charid', (req, res) => {
                 responseContext.sheetContext[key] = rows[0][key];
               }
             });
+
+            // create equipment list for character
+            if (rows[0]['equipment']) {
+              responseContext.sheetContext['equipment'] = [];
+              JSON.parse(rows[0]["equipment"]).forEach(item => {
+                var itemObj = responseContext.sheetContext['AllEquipment'].find(entry => entry.id==item.id);
+                itemObj.uses = item.uses;
+                responseContext.sheetContext['equipment'].push(itemObj);
+              });
+            }
+
+            // create move list for character
+            if (rows[0]['moves']) {
+              responseContext.sheetContext['moves'] = [];
+              JSON.parse(rows[0]["moves"]).forEach(move => {
+                responseContext.sheetContext['moves'].push(responseContext.sheetContext['AllMoves'].find(entry => entry.id==move));
+              });
+            }
           }
 
           // send response
