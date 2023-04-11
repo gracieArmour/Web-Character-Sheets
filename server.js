@@ -95,7 +95,7 @@ class contextBlock {
   // sheet context
   sheetContext = {
     basicProperties: [{name:"Age"}, {name:"Height"}, {name:"Weight"}],
-    statsList: []
+    statsList: [],
   };
 
   constructor(sys,id) {
@@ -117,44 +117,36 @@ class contextBlock {
   }
 }
 
-function soaGetListData(context) {
+async function soaGetListData(context) {
   // get moves
-  connection.query('SELECT * FROM soa_moves', (err, rows, fields) => {
-    if (err) {
-      console.log(err);
-    }else {
-      // create allMoves
-      context.sheetContext["allMoves"] = [];
-      rows.forEach(row => {
-        context.sheetContext["allMoves"].push({
-          id: row.id,
-          type: row.type,
-          playbook: row.source,
-          name: row.name
-        });
+  await connection.query('SELECT * FROM soa_moves', (err, rows, fields) => {
+    if (err) throw err;
+    // create allMoves
+    context.sheetContext["allMoves"] = [];
+    rows.forEach(row => {
+      context.sheetContext["allMoves"].push({
+        id: row.id,
+        type: row.type,
+        playbook: row.source,
+        name: row.name
       });
-    }
+    });
   });
 
   // get equipment
-  connection.query('SELECT * FROM soa_equipment', (err, rows, fields) => {
-    if (err) {
-      console.log(err);
-    }else {
-      // create allEquipment
-      context.sheetContext["allEquipment"] = [];
-      rows.forEach(row => {
-        context.sheetContext["allEquipment"].push({
-          id: row.id,
-          type: row.type,
-          custom: row.is_custom,
-          name: row.name
-        });
+  await connection.query('SELECT * FROM soa_equipment', (err, rows, fields) => {
+    if (err) throw err;
+    // create allEquipment
+    context.sheetContext["allEquipment"] = [];
+    rows.forEach(row => {
+      context.sheetContext["allEquipment"].push({
+        id: row.id,
+        type: row.type,
+        custom: row.is_custom,
+        name: row.name
       });
-    }
+    });
   });
-
-  console.log(context.rawify());
 }
 
 // routing for home page using regex to catch possible home path variations
@@ -166,11 +158,11 @@ app.get('/systems/:sys', (req, res) => {
   var responseContext = new contextBlock(sys);
   if (systemsList.includes(sys)) {
     if (sys=="soa") {
-      soaGetListData(responseContext);
+      soaGetListData(responseContext)
+        .then(res.status(200).render(path.join('systems',sys), responseContext.rawify()));
+    }else {
+      res.status(200).render(path.join('systems',sys), responseContext.rawify());
     }
-
-    // send response
-    res.status(200).render(path.join('systems',sys), responseContext.rawify());
   }else {
     res.status(404).render('404', responseContext);
   }
@@ -182,24 +174,18 @@ app.get('/load_characters/:sys', (req, res) => {
   var responseContext = new contextBlock(sys);
 
   if (systemsList.includes(sys)) {
-    console.log('SELECT * FROM '+sys+'_characters');
     connection.query('SELECT * FROM '+sys+'_characters', (err, rows, fields) => {
-      if (err) {
-        console.log(err);
-      }else {
-        console.log(rows);
-        // modify context
-        var output = [];
-        rows.forEach(row => {
-          if (JSON.parse(row.users).includes(req.session.username)) {
-            output.push({id: row.id,name: row.name,image: row.image_url});
-          }
-        });
-        responseContext.sheetContext['charactersList'] = output;
+      if (err) throw err;
+      // modify context
+      responseContext.sheetContext['charactersList'] = [];
+      rows.forEach(row => {
+        if (JSON.parse(row.users).includes(req.session.username)) {
+          responseContext.sheetContext['charactersList'].push({id: row.id,name: row.name,image: row.image_url});
+        }
+      });
 
-        // send response
-        res.status(200).render('characterList', responseContext);
-      }
+      // send response
+      res.status(200).render('characterList', responseContext.rawify());
     });
   }else {
     res.status(404).render('404', responseContext);
@@ -216,60 +202,57 @@ app.get('/character/:sys/:charid', (req, res) => {
   if (systemsList.includes(sys)) {
     // grab character data
     connection.query('SELECT * FROM '+sys+'_characters WHERE id='+id, (err, rows, fields) => {
-      if (err) {
-        console.log(err);
-      }else {
-        if (JSON.parse(rows[0]['users']).includes(req.session.username)) {
-          // grab list data
-          if (sys=="soa") {
-            soaGetListData(responseContext);
-            console.log(responseContext.rawify());
-
-            // modify context
-            Object.keys(rows[0]).forEach(key => {
-              if (key=="id") {
-                responseContext.sheetContext['charID'] = rows[0][key];
-              }else if (key=="moves" || key=="equipment") {
-                // console.log(rows[0][key]);
-              }else if (key=="users" || key=="basic_properties" || key=="playbooks") {
-                responseContext.sheetContext[key] = JSON.parse(rows[0][key]);
-              }else if (key.includes("stat") || key.includes("debility")) {
-                responseContext.sheetContext["statsList"].forEach(stat => {
-                  if (stat.statName.toUpperCase()==key.split("_")[1].toUpperCase()) {
-                    stat['statValue'] = rows[0][key];
-                  }else if (stat.debilityName.toUpperCase()==key.split("_")[1].toUpperCase()) {
-                    stat['debilityValue'] = rows[0][key];
-                  }
+      if (err) throw err;
+      if (JSON.parse(rows[0]['users']).includes(req.session.username)) {
+        // grab list data
+        if (sys=="soa") {
+          soaGetListData(responseContext)
+            .then((result) => {
+              // modify context
+              Object.keys(rows[0]).forEach(key => {
+                if (key=="id") {
+                  responseContext.sheetContext['charID'] = rows[0][key];
+                }else if (key=="moves" || key=="equipment") {
+                  // console.log(rows[0][key]);
+                }else if (key=="users" || key=="basic_properties" || key=="playbooks") {
+                  responseContext.sheetContext[key] = JSON.parse(rows[0][key]);
+                }else if (key.includes("stat") || key.includes("debility")) {
+                  responseContext.sheetContext["statsList"].forEach(stat => {
+                    if (stat.statName.toUpperCase()==key.split("_")[1].toUpperCase()) {
+                      stat['statValue'] = rows[0][key];
+                    }else if (stat.debilityName.toUpperCase()==key.split("_")[1].toUpperCase()) {
+                      stat['debilityValue'] = rows[0][key];
+                    }
+                  });
+                }else {
+                  responseContext.sheetContext[key] = rows[0][key];
+                }
+              });
+            
+              // create equipment list for character
+              if (rows[0]['equipment']) {
+                responseContext.sheetContext['equipment'] = [];
+                JSON.parse(rows[0]["equipment"]).forEach(item => {
+                  var itemObj = responseContext.sheetContext['allEquipment'].find(entry => entry.id==item.id);
+                  itemObj.uses = item.uses;
+                  responseContext.sheetContext['equipment'].push(itemObj);
                 });
-              }else {
-                responseContext.sheetContext[key] = rows[0][key];
               }
-            });
-
-            // create equipment list for character
-            if (rows[0]['equipment']) {
-              responseContext.sheetContext['equipment'] = [];
-              JSON.parse(rows[0]["equipment"]).forEach(item => {
-                var itemObj = responseContext.sheetContext['AllEquipment'].find(entry => entry.id==item.id);
-                itemObj.uses = item.uses;
-                responseContext.sheetContext['equipment'].push(itemObj);
-              });
-            }
-
-            // create move list for character
-            if (rows[0]['moves']) {
-              responseContext.sheetContext['moves'] = [];
-              JSON.parse(rows[0]["moves"]).forEach(move => {
-                responseContext.sheetContext['moves'].push(responseContext.sheetContext['AllMoves'].find(entry => entry.id==move));
-              });
-            }
-          }
-
-          // send response
-          res.status(200).render(path.join('systems',sys), responseContext.rawify());
+            
+              // create move list for character
+              if (rows[0]['moves']) {
+                responseContext.sheetContext['moves'] = [];
+                JSON.parse(rows[0]["moves"]).forEach(move => {
+                  responseContext.sheetContext['moves'].push(responseContext.sheetContext['allMoves'].find(entry => entry.id==move));
+                });
+              }
+            })
+            .then(res.status(200).render(path.join('systems',sys), responseContext.rawify()));
         }else {
-          res.status(404).render('404', responseContext);
+          res.status(200).render(path.join('systems',sys), responseContext.rawify());
         }
+      }else {
+        res.status(404).render('404', responseContext);
       }
     })
   }else {
@@ -286,41 +269,39 @@ app.post('/auth/:loginType', express.json(), (req, res) => {
 
   if (username && password) {
     connection.query('SELECT * FROM user_accounts WHERE username="'+username+'"', (err,rows,fields) => {
-      if (err) {
-        console.log(err);
-      }else {
-        if (rows.length > 0) {
-          if (type=="login") {
-            if (rows[0]['password']==password) {
-              req.session.loggedin = true;
-              req.session.username = username;
-              res.send('Logged in');
-            }else {
-              res.send('Incorrect password');
-            }
+      if (err) throw err;
+      if (rows.length > 0) {
+        if (type=="login") {
+          if (rows[0]['password']==password) {
+            req.session.loggedin = true;
+            req.session.username = username;
+            res.send('Logged in');
           }else {
-            res.send('Username not available');
+            res.send('Incorrect password');
           }
         }else {
-          if (type=="login") {
-            res.send('Username does not exist');
-          }else {
-            connection.query('INSERT INTO user_accounts (username, password) VALUES (\"'+username+'\", \"'+password+'\")', (insertErr, insertRows, insertFields) => {
-              if (err) {
-                console.log(err);
-              }else {
-                req.session.loggedin = true;
-                req.session.username = username;
-                res.send('Account created');
-              }
-            })
-          }
+          res.send('Username not available');
+        }
+      }else {
+        if (type=="login") {
+          res.send('Username does not exist');
+        }else {
+          connection.query('INSERT INTO user_accounts (username, password) VALUES (\"'+username+'\", \"'+password+'\")', (insertErr, insertRows, insertFields) => {
+            if (err) {
+              console.log(err);
+            }else {
+              req.session.loggedin = true;
+              req.session.username = username;
+              res.send('Account created');
+            }
+          })
         }
       }
     })
   }else {
     res.send('Must fill out both fields');
   }
+  res.end();
 });
 
 // share character
@@ -332,24 +313,21 @@ app.post('/share_character/:sys/:id', express.json(), (req,res) => {
 
   if (newUser) {
     connection.query('SELECT * FROM user_accounts WHERE username="'+newUser+'"', (err,rows,fields) => {
-      if (err) {
-        console.log(err);
-      }else {
-        if (rows.length > 0) {
-          existingUsers.push(newUser);
-          if (!(existingUsers.includes(req.session.username))) {
-            existingUsers.push(req.session.username);
-          }
-          connection.query('UPDATE '+sys+'_characters SET users=\''+JSON.stringify(existingUsers)+'\' WHERE id='+id, (err,rows,fields) => {
-            if (err) {
-              console.log(err);
-            }else {
-              res.send('Shared successfully');
-            }
-          });
-        }else {
-          res.send('Account does not exist, username may be misspelled');
+      if (err) throw err;
+      if (rows.length > 0) {
+        existingUsers.push(newUser);
+        if (!(existingUsers.includes(req.session.username))) {
+          existingUsers.push(req.session.username);
         }
+        connection.query('UPDATE '+sys+'_characters SET users=\''+JSON.stringify(existingUsers)+'\' WHERE id='+id, (err,rows,fields) => {
+          if (err) {
+            console.log(err);
+          }else {
+            res.send('Shared successfully');
+          }
+        });
+      }else {
+        res.send('Account does not exist, username may be misspelled');
       }
     });
   }else {
@@ -357,13 +335,11 @@ app.post('/share_character/:sys/:id', express.json(), (req,res) => {
       existingUsers.push(req.session.username);
     }
     connection.query('UPDATE '+sys+'_characters SET users=\''+JSON.stringify(existingUsers)+'\' WHERE id='+id, (err,rows,fields) => {
-      if (err) {
-        console.log(err);
-      }else {
-        res.send('Shared successfully');
-      }
+      if (err) throw err;
+      res.send('Shared successfully');
     });
   }
+  res.end();
 });
 
 // catch form data
@@ -382,18 +358,15 @@ app.post('/database/:fetchType', (req, res) => {
     case "AllEquipment":
       connection.query('SELECT * FROM soa_'+fetchType.replace("All","").toLowerCase(), (err, rows, fields) => {
         var output = {};
-        if (err) {
-          console.log(err);
-        }else {
-          rows.forEach(row => {
-            output[row.id] = row;
-          });
-        }
+        if (err) throw err;
+        rows.forEach(row => {
+          output[row.id] = row;
+        });
         res.status(200).send(output);
-        res.end();
       })
       break;
   }
+  res.end();
 })
 
 // routing for 404 error page
