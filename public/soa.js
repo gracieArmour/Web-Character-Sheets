@@ -267,7 +267,7 @@ document.getElementById("share-modal-button").addEventListener("click", sendShar
 // 		}else if (elem.classList.includes("save-bProps")) {
 // 			basicProperties.push({name:elem.name,value:elem.value});
 // 		}else if (elem.classList.includes("save-customProps")) {
-// 			basicProperties.push({name: elem.("name").value, value: elem.childNodes.item("value").value});
+// 			basicProperties.push({name: elem.childNodes.item("name").value, value: elem.childNodes.item("value").value});
 // 		}else if (elem.classList.includes("save-playbooks")) {
 
 // 		}
