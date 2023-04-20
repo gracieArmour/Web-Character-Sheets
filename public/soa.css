@@ -141,6 +141,29 @@ textarea {
     cursor: pointer;
 }
 
+/* equipment selector */
+#playbook-dropdown-container {
+    position: relative;
+}
+
+#playbook-dropdown {
+    position: absolute;
+    top: 20px;
+    width: 100%;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.playbook-list-entry {
+    margin: 3px 0;
+}
+
+.playbook-list-entry:hover {
+    cursor: pointer;
+    background-color: #474747;
+}
+
+
 /* Level */
 #level-container {
     display: flex;
@@ -263,6 +286,7 @@ textarea {
     height: 100px;
 }
 
+
 /* Equipment */
 .item-name-container {
     display: flex;
@@ -323,7 +347,6 @@ textarea {
 
 #equipment-dropdown {
     position: absolute;
-    z-index: 2;
     top: 20px;
     width: 100%;
     flex-direction: column;

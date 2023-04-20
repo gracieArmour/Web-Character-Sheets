@@ -41,7 +41,7 @@ async function sendLogin(type) {
     var loginReply = await loginResponse.text();
 
     if (loginReply=="Account created" || loginReply=="Logged in") {
-        document.getElementById("login-modal-container").classList.add("hidden");
+        location.reload();
     }else {
         document.getElementById("login-message").textContent = loginReply;
     }
@@ -66,3 +66,14 @@ document.getElementById("share-modal-toggle").addEventListener("click", function
 document.getElementById("close-share").addEventListener("click", function() {
     document.getElementById("share-modal-container").classList.add("hidden");
 });
+
+
+// Debug Keybind
+window.addEventListener('keyup', function(e){
+    if (e.shiftKey && e.ctrlKey && e.altKey && e.code == "KeyI") {
+        [...document.getElementsByClassName("debug")].forEach(elem => {
+            elem.classList.toggle("hidden");
+        })
+        console.log("Debug Toggled");
+    }
+}, false);

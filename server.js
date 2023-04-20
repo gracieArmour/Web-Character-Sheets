@@ -76,6 +76,17 @@ setTimeout(function() {
   });
 }, 4000);
 
+function queryPromise(queryStr) {
+  return new Promise((resolve,reject) => {
+    connection.query(queryStr, (err,rows) => {
+      if (err) {
+        return reject(err);
+      }
+      return resolve(rows);
+    })
+  })
+}
+
 
 // get list of current systems pages
 var systemsList = fs.readdirSync(path.join(__dirname,'views','systems'));
@@ -119,34 +130,39 @@ class contextBlock {
 
 async function soaGetListData(context) {
   // get moves
-  await connection.query('SELECT * FROM soa_moves', (err, rows, fields) => {
-    if (err) throw err;
-    // create allMoves
-    context.sheetContext["allMoves"] = [];
-    rows.forEach(row => {
-      context.sheetContext["allMoves"].push({
-        id: row.id,
-        type: row.type,
-        playbook: row.source,
-        name: row.name
-      });
+  var playbookRows = await queryPromise('SELECT DISTINCT source FROM soa_moves WHERE source<>"Custom"');
+  var equipRows = await queryPromise('SELECT * FROM soa_equipment');
+  var moveRows = await queryPromise('SELECT * FROM soa_moves');
+
+  // create allPlaybooks
+  context.sheetContext["allPlaybooks"] = [];
+  playbookRows.forEach(row => {
+    context.sheetContext["allPlaybooks"].push(row.source);
+  });
+
+  // create allEquipment
+  context.sheetContext["allEquipment"] = [];
+  equipRows.forEach(row => {
+    context.sheetContext["allEquipment"].push({
+      id: row.id,
+      type: row.type,
+      custom: row.is_custom,
+      name: row.name
     });
   });
 
-  // get equipment
-  await connection.query('SELECT * FROM soa_equipment', (err, rows, fields) => {
-    if (err) throw err;
-    // create allEquipment
-    context.sheetContext["allEquipment"] = [];
-    rows.forEach(row => {
-      context.sheetContext["allEquipment"].push({
-        id: row.id,
-        type: row.type,
-        custom: row.is_custom,
-        name: row.name
-      });
+  // create allMoves
+  context.sheetContext["allMoves"] = [];
+  moveRows.forEach(row => {
+    context.sheetContext["allMoves"].push({
+      id: row.id,
+      type: row.type,
+      playbook: row.source,
+      name: row.name
     });
   });
+
+  return [equipRows,moveRows];
 }
 
 // routing for home page using regex to catch possible home path variations
@@ -159,7 +175,9 @@ app.get('/systems/:sys', (req, res) => {
   if (systemsList.includes(sys)) {
     if (sys=="soa") {
       soaGetListData(responseContext)
-        .then(res.status(200).render(path.join('systems',sys), responseContext.rawify()));
+        .then((result) => {
+          res.status(200).render(path.join('systems',sys), responseContext.rawify())
+        });
     }else {
       res.status(200).render(path.join('systems',sys), responseContext.rawify());
     }
@@ -233,7 +251,7 @@ app.get('/character/:sys/:charid', (req, res) => {
               if (rows[0]['equipment']) {
                 responseContext.sheetContext['equipment'] = [];
                 JSON.parse(rows[0]["equipment"]).forEach(item => {
-                  var itemObj = responseContext.sheetContext['allEquipment'].find(entry => entry.id==item.id);
+                  var itemObj = result[0].find(entry => entry.id==item.id);
                   itemObj.uses = item.uses;
                   responseContext.sheetContext['equipment'].push(itemObj);
                 });
@@ -243,11 +261,13 @@ app.get('/character/:sys/:charid', (req, res) => {
               if (rows[0]['moves']) {
                 responseContext.sheetContext['moves'] = [];
                 JSON.parse(rows[0]["moves"]).forEach(move => {
-                  responseContext.sheetContext['moves'].push(responseContext.sheetContext['allMoves'].find(entry => entry.id==move));
+                  responseContext.sheetContext['moves'].push(result[1].find(entry => entry.id==move));
                 });
               }
             })
-            .then(res.status(200).render(path.join('systems',sys), responseContext.rawify()));
+            .then((result) => {
+              res.status(200).render(path.join('systems',sys), responseContext.rawify())
+            });
         }else {
           res.status(200).render(path.join('systems',sys), responseContext.rawify());
         }
@@ -301,7 +321,6 @@ app.post('/auth/:loginType', express.json(), (req, res) => {
   }else {
     res.send('Must fill out both fields');
   }
-  res.end();
 });
 
 // share character
@@ -339,14 +358,19 @@ app.post('/share_character/:sys/:id', express.json(), (req,res) => {
       res.send('Shared successfully');
     });
   }
-  res.end();
 });
 
 // catch form data
 app.post('/save_character', express.json(), (req, res) => {
-  console.log(req.body);
+  // console.log(req.body);
+  // if (req.body.id) {
+  //   queryPromise('UPDATE soa_characters SET __ WHERE id='+req.body.id)
+  //     .then();
+  // }else {
+  //   queryPromise('INSERT INTO soa_characters (__) VALUES (__)')
+  //     .then();
+  // }
   res.status(200).send("post successful");
-  res.end();
 });
 
 // send raw data to client
@@ -356,17 +380,25 @@ app.post('/database/:fetchType', (req, res) => {
   switch (fetchType) {
     case "AllMoves":
     case "AllEquipment":
-      connection.query('SELECT * FROM soa_'+fetchType.replace("All","").toLowerCase(), (err, rows, fields) => {
-        var output = {};
-        if (err) throw err;
-        rows.forEach(row => {
-          output[row.id] = row;
+      queryPromise('SELECT * FROM soa_'+fetchType.replace("All","").toLowerCase())
+        .then((rows) => {
+          var output = {};
+          rows.forEach(row => {
+            output[row.id] = row;
+          });
+          res.status(200).send(output);
         });
-        res.status(200).send(output);
-      })
       break;
+    case "AllPlaybooks":
+      queryPromise('SELECT DISTINCT source FROM soa_moves WHERE source<>"Custom"')
+        .then((rows) => {
+          var output = [];
+          rows.forEach(row => {
+            output.push(row.source);
+          });
+          res.status(200).send(output);
+        });
   }
-  res.end();
 })
 
 // routing for 404 error page

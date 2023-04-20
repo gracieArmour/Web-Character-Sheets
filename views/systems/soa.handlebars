@@ -8,18 +8,15 @@
                     <label>Playbooks</label>
                     <div id="playbook-dropdown-container" class="dropdown-container">
                         <input id="playbook-search" class="search-bar dropdown-toggle" placeholder="search" onkeyup="playbookFilter()">
-                        <ul id="playbook-dropdown" class="playbook-list hidden">
+                        <div id="playbook-dropdown" class="dropdown-list hidden">
                             {{#each sheetContext.allPlaybooks}}
-                                <li class="playbook-list-entry">{{this}}</li>
+                                <div class="playbook-list-entry">{{this}}</div>
                             {{/each}}
-                        </ul>
+                        </div>
                     </div>
                     <div id="playbook-list" class="list">
                         {{#each sheetContext.playbooks}}
-                            <div class="playbook-entry savable save-playbooks">
-                                <label>{{this}}</label>
-                                <button class="delete-playbook-button">x</button>
-                            </div>
+                            {{> soaPlaybookEntry}}
                         {{/each}}
                     </div>
                 </div>
@@ -123,7 +120,7 @@
         <label><h2>Notes</h2></label>
         <textarea id="character-notes">{{sheetContext.notes}}</textarea>
     </div>
-    <div id="debug-area">
+    <div id="debug-area" class="debug hidden">
         <pre>{{raw}}</pre>
     </div>
 </div>
@@ -133,6 +130,7 @@
 <!--additional file dependencies-->
 <link rel="stylesheet" href="/soa.css"/>
 <script src="/soa.js" defer></script>
+<script src="/soaPlaybookEntry.js" defer></script>
 <script src="/soaEquipmentEntry.js" defer></script>
 <script src="/soaCustomEquipmentEntry.js" defer></script>
 <script src="/soaMoveEntry.js" defer></script>

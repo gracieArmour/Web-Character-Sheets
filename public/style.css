@@ -57,6 +57,7 @@ header {
     position: absolute;
     display: flex;
     flex-direction: column;
+    z-index: 2;
     left: 0;
     top: 150%;
     background-color: #222222;

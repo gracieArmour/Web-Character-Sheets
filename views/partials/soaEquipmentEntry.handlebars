@@ -7,7 +7,7 @@
         <div class="entry-description">{{description}}</div>
         <div class="item-uses">
             <label>Uses</label>
-            <input type="number" class="big-number" name="item-amount" value="{{uses}}"/>
+            <input type="number" class="big-number" name="item-amount" value="{{#if uses}}{{uses}}{{else}}{{base_uses}}{{/if}}"/>
         </div>
     </div>
 </div>

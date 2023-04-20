@@ -1,15 +1,20 @@
 console.log("soa js loaded");
 
 // get playbook data
-var playbookMoveData, allEquipmentData;
+var allEquipmentData, playbookMoveData, allPlaybooks;
 async function getData() {
-	// moves
-	var playbookResponse = await fetch('/database/AllMoves', {method: 'POST'});
-	playbookMoveData = await playbookResponse.json();
-
 	// equipment
 	var equipmentResponse = await fetch('/database/AllEquipment', {method: 'POST'});
 	allEquipmentData = await equipmentResponse.json();
+
+	// moves
+	var moveResponse = await fetch('/database/AllMoves', {method: 'POST'});
+	playbookMoveData = await moveResponse.json();
+
+	// playbooks
+	// var playbookReponse = await fetch('/database/AllPlaybooks', {method: 'POST'});
+	// allPlaybooks = await playbookReponse.json();
+	// console.log(allPlaybooks);
 }
 getData();
 
@@ -17,44 +22,38 @@ getData();
 var simplemde = new SimpleMDE({ element: document.getElementById("character-notes") });
 
 
-// listeners
+// STATIC LISTENERS
 document.getElementById("add-basic-property-button").addEventListener("click", function () {
 	let newHTML = Handlebars.templates.basicPropertyEntry({});
 	var section = document.getElementById('basic-properties-list');
 	section.insertAdjacentHTML('beforeend', newHTML);
+	refreshListeners();
 });
 
-[...document.getElementsByClassName("delete-playbook-button")].forEach(elem => {
-	elem.addEventListener("click", (event) => {
-		event.target.closest(".playbook-entry").remove();
-	})
-});
-
-[...document.getElementsByClassName("delete-equipment-button")].forEach(elem => {
-	elem.addEventListener("click", (event) => {
-		event.target.closest(".item-entry").remove();
-	})
-});
-
-[...document.getElementsByClassName("delete-move-button")].forEach(elem => {
-	elem.addEventListener("click", (event) => {
-		event.target.closest(".move-entry").remove();
-	})
-});
-
-// playbook search listeners
+//playbook search
 var playbookListDropdown = document.getElementById("playbook-dropdown");
 
 document.getElementById("playbook-search").addEventListener("focusin", function () {
 	playbookListDropdown.classList.remove("hidden");
-	moveFilter();
+	playbookFilter();
 });
 
 document.getElementById("playbook-search").addEventListener("focusout", function () {
-	playbookListDropdown.classList.add("hidden");
+	setTimeout(function() {
+		playbookListDropdown.classList.add("hidden");
+	},100);
 });
 
-// equipment search listeners
+[...document.getElementsByClassName("playbook-list-entry")].forEach(elem => {
+	elem.addEventListener("click", function() {
+		let newHTML = Handlebars.templates.soaPlaybookEntry(elem.textContent);
+		var section = document.getElementById('playbook-list');
+		section.insertAdjacentHTML('beforeend', newHTML);
+		refreshListeners();
+	})
+});
+
+// equipment search
 var equipmentListDropdown = document.getElementById("equipment-dropdown");
 
 document.getElementById("equipment-search").addEventListener("focusin", function () {
@@ -73,6 +72,7 @@ document.getElementById("equipment-search").addEventListener("focusout", functio
 		let newHTML = Handlebars.templates.soaEquipmentEntry(allEquipmentData[elem.dataset.equipmentid]);
 		var section = document.getElementById('equipment-list');
 		section.insertAdjacentHTML('beforeend', newHTML);
+		refreshListeners();
 	})
 });
 
@@ -80,9 +80,10 @@ document.getElementById("add-equipment-button").addEventListener("click", functi
 	let newHTML = Handlebars.templates.soaCustomEquipmentEntry({});
 	var section = document.getElementById('equipment-list');
 	section.insertAdjacentHTML('beforeend', newHTML);
+	refreshListeners();
 });
 
-// move search listeners
+// move search
 var moveListDropdown = document.getElementById("move-dropdown");
 
 document.getElementById("move-search").addEventListener("focusin", function () {
@@ -101,6 +102,7 @@ document.getElementById("move-search").addEventListener("focusout", function () 
 		let newHTML = Handlebars.templates.soaMoveEntry(playbookMoveData[elem.dataset.moveid]);
 		var section = document.getElementById('move-list');
 		section.insertAdjacentHTML('beforeend', newHTML);
+		refreshListeners();
 	})
 });
 
@@ -108,7 +110,31 @@ document.getElementById("add-move-button").addEventListener("click", function ()
 	let newHTML = Handlebars.templates.soaCustomMoveEntry({});
 	var section = document.getElementById('move-list');
 	section.insertAdjacentHTML('beforeend', newHTML);
+	refreshListeners();
 });
+
+
+// DYNAMIC LISTENERS
+function refreshListeners() {
+	[...document.getElementsByClassName("delete-playbook-button")].forEach(elem => {
+		elem.addEventListener("click", (event) => {
+			event.target.closest(".playbook-entry").remove();
+		})
+	});
+
+	[...document.getElementsByClassName("delete-equipment-button")].forEach(elem => {
+		elem.addEventListener("click", (event) => {
+			event.target.closest(".item-entry").remove();
+		})
+	});
+
+	[...document.getElementsByClassName("delete-move-button")].forEach(elem => {
+		elem.addEventListener("click", (event) => {
+			event.target.closest(".move-entry").remove();
+		})
+	});
+}
+refreshListeners();
 
 
 // dropdown logic
@@ -180,10 +206,11 @@ function textFilter(item,filter) {
 
 function playbookFilter() {
 	var dropdownList = [...document.getElementsByClassName("playbook-list-entry")];
+	var playbookList = [...document.getElementsByClassName("playbook-entry")].map(elem => {return elem.dataset.playbookname});
 	var filterText = document.getElementById("playbook-search").value;
 
 	for (var i = 0; i < dropdownList.length; i++) {
-		if (textFilter(dropdownList[i],filterText)) {
+		if (textFilter(dropdownList[i],filterText) || (playbookList.includes(dropdownList[i].textContent))) {
 			dropdownList[i].style.display = "none";
 		} else {
 			dropdownList[i].style.display = "";
@@ -193,10 +220,12 @@ function playbookFilter() {
 
 function equipmentFilter() {
 	var dropdownList = [...document.getElementsByClassName("equipment-list-entry")];
+	var equipmentList = [...document.getElementsByClassName("item-entry")].map(elem => {return elem.dataset.equipid});
 	var filterText = document.getElementById("equipment-search").value;
+	console.log(equipmentList);
 
 	for (var i = 0; i < dropdownList.length; i++) {
-		if (textFilter(dropdownList[i],filterText)) {
+		if (textFilter(dropdownList[i],filterText) || (equipmentList.includes(dropdownList[i].dataset.equipmentid))) {
 			dropdownList[i].style.display = "none";
 		} else {
 			dropdownList[i].style.display = "";
@@ -211,7 +240,6 @@ function moveFilter() {
 	for (var i = 0; i < dropdownList.length; i++) {
 		if (onpageFilter(dropdownList[i]) || rulesFilter(dropdownList[i]) || textFilter(dropdownList[i],filterText)) {
 			dropdownList[i].style.display = "none";
-			// console.log(onpageFilter(dropdownList[i])+", "+rulesFilter(dropdownList[i])+", "+textFilter(dropdownList[i],filterText));
 		} else {
 			dropdownList[i].style.display = "flex";
 		}
@@ -242,7 +270,7 @@ async function sendShare() {
     var shareReply = await shareResponse.text();
 
     if (shareReply=="Shared successfully") {
-        document.getElementById("share-modal-container").classList.add("hidden");
+        location.reload();
     }else {
         document.getElementById("share-message").textContent = shareReply;
     }
@@ -254,25 +282,71 @@ document.getElementById("share-modal-button").addEventListener("click", sendShar
 
 
 // save logic
-// var submitButton = document.getElementById("saveButton");
+var submitButton = document.getElementById("saveButton");
 
-// submitButton.addEventListener('click', function() {
-// 	var o = {};
-// 	var savables = [...document.getElementsByClassName("savable")];
-// 	var basicProperties = [];
+async function sendSave(data) {
+	var response = await fetch('/save_character', {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json'
+		},
+		body: JSON.stringify(data)
+	});
 
-// 	savables.forEach(elem => {
-// 		if (elem.classList.includes("save-img")) {
-// 			o[elem.name] = elem.src;
-// 		}else if (elem.classList.includes("save-bProps")) {
-// 			basicProperties.push({name:elem.name,value:elem.value});
-// 		}else if (elem.classList.includes("save-customProps")) {
-// 			basicProperties.push({name: elem.childNodes.item("name").value, value: elem.childNodes.item("value").value});
-// 		}else if (elem.classList.includes("save-playbooks")) {
+	console.log(response);
+}
 
-// 		}
-// 	})
-// });
+submitButton.addEventListener('click', function() {
+	var savables = [...document.getElementsByClassName("savable")];
+	var o = {
+		basic_properties: [],
+		playbooks: [],
+		equipment: [],
+		customEquips: [],
+		moves: [],
+		customMoves: []
+	};
+
+	savables.forEach(elem => {
+		if (elem.classList.contains("save-img")) {
+			o[elem.name] = elem.src;
+		}else if (elem.classList.contains("save-bProps")) {
+			o['basic_properties'].push({name:elem.name,value:elem.value});
+		}else if (elem.classList.contains("save-customProps")) {
+			o['basic_properties'].push({name: elem.childNodes.item("name").value, value: elem.childNodes.item("value").value});
+		}else if (elem.classList.contains("save-playbooks")) {
+			o['playbooks'].push(elem.dataset.playbookname);
+		}else if (elem.classList.contains("save-stats")) {
+			o['stat_'+elem.id.split('-')[1].toLowerCase()] = elem.querySelector('.stat-value').value;
+			o['debility_'+elem.querySelector('.debility-container').id.split('-')[1].toLowerCase()] = elem.querySelector('.debility-checkbox').checked;
+		}else if (elem.classList.contains("save-hp")) {
+			o['current_hp'] = elem.querySelector('#hp-slider').value;
+			o['max_hp'] = elem.querySelector('#hp-slider').max;
+		}else if (elem.classList.contains("save-equipment")) {
+			o['equipment'].push({id: elem.dataset.equipid, uses: elem.querySelector('.item-uses input').value});
+		}else if (elem.classList.contains("save-customEquips")) {
+			o['customEquips'].push({name: elem.querySelector('.item-name-container label input').value, description: elem.querySelector('.entry-description').textContent, base_uses: elem.querySelector('.item-uses input').value, type: elem.querySelector('.item-name-container>input').value, cost: 0, is_custom: 1});
+		}else if (elem.classList.contains("save-moves")) {
+			o['moves'].push(elem.dataset.moveid);
+		}else if (elem.classList.contains("save-customMoves")) {
+			o['customMoves'].push({name: elem.querySelector('.move-name-container label input').value, description: elem.querySelector('.entry-description').textContent, type: elem.querySelector('.move-name-container>input').value, prereq_level: 0, prereq_move: 0, source: "Custom"});
+		}else {
+			o[elem.name] = elem.value;
+		}
+	});
+	o['notes'] = simplemde.value();
+	o['id'] = document.getElementById('character-sheet').dataset.charid;
+
+	sendSave(o);
+});
+
+
+// Leave warning
+window.addEventListener('beforeunload', function(e) {
+	const warning = "Changes you made may not be saved.";
+    e.returnValue = warning;
+    return warning;
+});
 
 
 // var formElem = document.getElementById("character-sheet");
