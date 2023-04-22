@@ -59,26 +59,31 @@ app.set('view engine', 'handlebars');
 var connection;
 
 setTimeout(function() {
-  connection = mysql.createConnection({
+  pool = mysql.createPool({
+    connectionLimit: 10,
     host: process.env.DBADDRESS,
 	  port: process.env.DBPORT,
     user: process.env.DBUSER,
     password: process.env.DBPASS,
     database: process.env.DBNAME
   });
-
-  connection.connect(function(err) {
-    if (err) {
-      console.log(err);
-    }else {
-      console.log("Database Connected");
-    }
-  });
+  console.log("Database Connected");
 }, 4000);
 
 function queryPromise(queryStr) {
   return new Promise((resolve,reject) => {
-    connection.query(queryStr, (err,rows) => {
+    pool.query(queryStr, (err,rows) => {
+      if (err) {
+        return reject(err);
+      }
+      return resolve(rows);
+    })
+  })
+}
+
+function queryPromiseArr(queryStr,arr) {
+  return new Promise((resolve,reject) => {
+    pool.query(queryStr, arr, (err,rows) => {
       if (err) {
         return reject(err);
       }
@@ -94,7 +99,7 @@ systemsList.forEach((name,index) => { systemsList[index] = name.replace(".handle
 
 
 // context variables to be used in page routing
-var listStats = {
+const listStats = {
   soa: [{statName:"Mighty",debilityName:"Weakened"},{statName:"Agile",debilityName:"Shaky"},{statName:"Versed",debilityName:"Addled"},{statName:"Cunning",debilityName:"Confused"},{statName:"Spirited",debilityName:"Broken"}],
   dnd: []
 };
@@ -105,7 +110,7 @@ class contextBlock {
   charID;
   // sheet context
   sheetContext = {
-    basicProperties: [{name:"Age"}, {name:"Height"}, {name:"Weight"}],
+    basic_properties: [{name:"Age"}, {name:"Height"}, {name:"Weight"}],
     statsList: [],
   };
 
@@ -113,11 +118,11 @@ class contextBlock {
     if (sys) {
       this.sysName = sys;
       this.layout = "system";
-      this.sheetContext['statsList'] = listStats[sys];
+      this.sheetContext.statsList = JSON.parse(JSON.stringify(listStats[sys]));
     }
     if (id) {
       this.charID = id;
-      this.sheetContext['basicProperties'] = [];
+      this.sheetContext.basic_properties = [];
     }
   }
 
@@ -165,6 +170,28 @@ async function soaGetListData(context) {
   return [equipRows,moveRows];
 }
 
+async function soaAddCustoms(char) {
+  if (char.customEquips) {
+    for (const item of char.customEquips) {
+      var response = await queryPromiseArr("INSERT INTO soa_equipment SET ?", [item]);
+      char.equipment.push({id: response.insertId, uses: item.base_uses});
+    }
+  }
+
+  if (char.customMoves) {
+    for (const move of char.customMoves) {
+      var response = await queryPromiseArr("INSERT INTO soa_moves SET ?", [move]);
+      char['moves'].push(response.insertId);
+    }
+  }
+
+  // cleanup
+  delete char.customEquips;
+  delete char.customMoves;
+  char.equipment = JSON.stringify(char.equipment);
+  char.moves = JSON.stringify(char.moves);
+}
+
 // routing for home page using regex to catch possible home path variations
 app.get('/:homePath(home|index|index.html)?', (req, res) => {res.status(200).render('home', new contextBlock)});
 
@@ -192,19 +219,19 @@ app.get('/load_characters/:sys', (req, res) => {
   var responseContext = new contextBlock(sys);
 
   if (systemsList.includes(sys)) {
-    connection.query('SELECT * FROM '+sys+'_characters', (err, rows, fields) => {
-      if (err) throw err;
-      // modify context
-      responseContext.sheetContext['charactersList'] = [];
-      rows.forEach(row => {
-        if (JSON.parse(row.users).includes(req.session.username)) {
-          responseContext.sheetContext['charactersList'].push({id: row.id,name: row.name,image: row.image_url});
-        }
-      });
+    queryPromise('SELECT * FROM '+sys+'_characters')
+      .then((rows) => {
+        // modify context
+        responseContext.sheetContext['charactersList'] = [];
+        rows.forEach(row => {
+          if (JSON.parse(row.users).includes(req.session.username)) {
+            responseContext.sheetContext['charactersList'].push({id: row.id,name: row.name,image: row.image_url});
+          }
+        });
 
-      // send response
-      res.status(200).render('characterList', responseContext.rawify());
-    });
+        // send response
+        res.status(200).render('characterList', responseContext.rawify());
+      });
   }else {
     res.status(404).render('404', responseContext);
   }
@@ -219,62 +246,62 @@ app.get('/character/:sys/:charid', (req, res) => {
 
   if (systemsList.includes(sys)) {
     // grab character data
-    connection.query('SELECT * FROM '+sys+'_characters WHERE id='+id, (err, rows, fields) => {
-      if (err) throw err;
-      if (JSON.parse(rows[0]['users']).includes(req.session.username)) {
-        // grab list data
-        if (sys=="soa") {
-          soaGetListData(responseContext)
-            .then((result) => {
-              // modify context
-              Object.keys(rows[0]).forEach(key => {
-                if (key=="id") {
-                  responseContext.sheetContext['charID'] = rows[0][key];
-                }else if (key=="moves" || key=="equipment") {
-                  // console.log(rows[0][key]);
-                }else if (key=="users" || key=="basic_properties" || key=="playbooks") {
-                  responseContext.sheetContext[key] = JSON.parse(rows[0][key]);
-                }else if (key.includes("stat") || key.includes("debility")) {
-                  responseContext.sheetContext["statsList"].forEach(stat => {
-                    if (stat.statName.toUpperCase()==key.split("_")[1].toUpperCase()) {
-                      stat['statValue'] = rows[0][key];
-                    }else if (stat.debilityName.toUpperCase()==key.split("_")[1].toUpperCase()) {
-                      stat['debilityValue'] = rows[0][key];
-                    }
+    queryPromise('SELECT * FROM '+sys+'_characters WHERE id='+id)
+      .then((rows) => {
+        if (JSON.parse(rows[0]['users']).includes(req.session.username)) {
+          // grab list data
+          if (sys=="soa") {
+            soaGetListData(responseContext)
+              .then((result) => {
+                // modify context
+                Object.keys(rows[0]).forEach(key => {
+                  if (key=="id") {
+                    responseContext.sheetContext['charID'] = rows[0][key];
+                  }else if (key=="moves" || key=="equipment") {
+                    // console.log(rows[0][key]);
+                  }else if (key=="users" || key=="basic_properties" || key=="playbooks") {
+                    responseContext.sheetContext[key] = JSON.parse(rows[0][key]);
+                  }else if (key.includes("stat") || key.includes("debility")) {
+                    responseContext.sheetContext["statsList"].forEach(stat => {
+                      if (stat.statName.toUpperCase()==key.split("_")[1].toUpperCase()) {
+                        stat['statValue'] = rows[0][key];
+                      }else if (stat.debilityName.toUpperCase()==key.split("_")[1].toUpperCase()) {
+                        stat['debilityValue'] = rows[0][key];
+                      }
+                    });
+                  }else {
+                    responseContext.sheetContext[key] = rows[0][key];
+                  }
+                });
+              
+                // create equipment list for character
+                if (rows[0]['equipment']) {
+                  responseContext.sheetContext['equipment'] = [];
+                  JSON.parse(rows[0]["equipment"]).forEach(item => {
+                    var itemObj = result[0].find(entry => entry.id==item.id);
+                    itemObj.uses = item.uses;
+                    responseContext.sheetContext['equipment'].push(itemObj);
                   });
-                }else {
-                  responseContext.sheetContext[key] = rows[0][key];
                 }
+              
+                // create move list for character
+                if (rows[0]['moves']) {
+                  responseContext.sheetContext['moves'] = [];
+                  JSON.parse(rows[0]["moves"]).forEach(move => {
+                    responseContext.sheetContext['moves'].push(result[1].find(entry => entry.id==move));
+                  });
+                }
+              })
+              .then((result) => {
+                res.status(200).render(path.join('systems',sys), responseContext.rawify())
               });
-            
-              // create equipment list for character
-              if (rows[0]['equipment']) {
-                responseContext.sheetContext['equipment'] = [];
-                JSON.parse(rows[0]["equipment"]).forEach(item => {
-                  var itemObj = result[0].find(entry => entry.id==item.id);
-                  itemObj.uses = item.uses;
-                  responseContext.sheetContext['equipment'].push(itemObj);
-                });
-              }
-            
-              // create move list for character
-              if (rows[0]['moves']) {
-                responseContext.sheetContext['moves'] = [];
-                JSON.parse(rows[0]["moves"]).forEach(move => {
-                  responseContext.sheetContext['moves'].push(result[1].find(entry => entry.id==move));
-                });
-              }
-            })
-            .then((result) => {
-              res.status(200).render(path.join('systems',sys), responseContext.rawify())
-            });
+          }else {
+            res.status(200).render(path.join('systems',sys), responseContext.rawify());
+          }
         }else {
-          res.status(200).render(path.join('systems',sys), responseContext.rawify());
+          res.status(404).render('404', responseContext);
         }
-      }else {
-        res.status(404).render('404', responseContext);
-      }
-    })
+      });
   }else {
     res.status(404).render('404', responseContext);
   }
@@ -288,36 +315,33 @@ app.post('/auth/:loginType', express.json(), (req, res) => {
   var password = req.body.password;
 
   if (username && password) {
-    connection.query('SELECT * FROM user_accounts WHERE username="'+username+'"', (err,rows,fields) => {
-      if (err) throw err;
-      if (rows.length > 0) {
-        if (type=="login") {
-          if (rows[0]['password']==password) {
-            req.session.loggedin = true;
-            req.session.username = username;
-            res.send('Logged in');
-          }else {
-            res.send('Incorrect password');
-          }
-        }else {
-          res.send('Username not available');
-        }
-      }else {
-        if (type=="login") {
-          res.send('Username does not exist');
-        }else {
-          connection.query('INSERT INTO user_accounts (username, password) VALUES (\"'+username+'\", \"'+password+'\")', (insertErr, insertRows, insertFields) => {
-            if (err) {
-              console.log(err);
-            }else {
+    queryPromise('SELECT * FROM user_accounts WHERE username="'+username+'"')
+      .then((rows) => {
+        if (rows.length > 0) {
+          if (type=="login") {
+            if (rows[0]['password']==password) {
               req.session.loggedin = true;
               req.session.username = username;
-              res.send('Account created');
+              res.send('Logged in');
+            }else {
+              res.send('Incorrect password');
             }
-          })
+          }else {
+            res.send('Username not available');
+          }
+        }else {
+          if (type=="login") {
+            res.send('Username does not exist');
+          }else {
+            queryPromise('INSERT INTO user_accounts (username, password) VALUES (\"'+username+'\", \"'+password+'\")')
+              .then((result) => {
+                req.session.loggedin = true;
+                req.session.username = username;
+                res.send('Account created');
+              });
+          }
         }
-      }
-    })
+      });
   }else {
     res.send('Must fill out both fields');
   }
@@ -331,46 +355,67 @@ app.post('/share_character/:sys/:id', express.json(), (req,res) => {
   var existingUsers = req.body.existingUsers;
 
   if (newUser) {
-    connection.query('SELECT * FROM user_accounts WHERE username="'+newUser+'"', (err,rows,fields) => {
-      if (err) throw err;
-      if (rows.length > 0) {
-        existingUsers.push(newUser);
-        if (!(existingUsers.includes(req.session.username))) {
-          existingUsers.push(req.session.username);
-        }
-        connection.query('UPDATE '+sys+'_characters SET users=\''+JSON.stringify(existingUsers)+'\' WHERE id='+id, (err,rows,fields) => {
-          if (err) {
-            console.log(err);
-          }else {
-            res.send('Shared successfully');
+    queryPromise('SELECT * FROM user_accounts WHERE username="'+newUser+'"')
+      .then((rows) => {
+        if (rows.length > 0) {
+          existingUsers.push(newUser);
+          if (!(existingUsers.includes(req.session.username))) {
+            existingUsers.push(req.session.username);
           }
-        });
-      }else {
-        res.send('Account does not exist, username may be misspelled');
-      }
-    });
+          queryPromise('UPDATE '+sys+'_characters SET users=\''+JSON.stringify(existingUsers)+'\' WHERE id='+id)
+            .then((result) => {
+              res.send('Shared successfully');
+            });
+        }else {
+          res.send('Account does not exist, username may be misspelled');
+        }
+      });
   }else {
     if (!(existingUsers.includes(req.session.username))) {
       existingUsers.push(req.session.username);
     }
-    connection.query('UPDATE '+sys+'_characters SET users=\''+JSON.stringify(existingUsers)+'\' WHERE id='+id, (err,rows,fields) => {
-      if (err) throw err;
-      res.send('Shared successfully');
-    });
+    queryPromise('UPDATE '+sys+'_characters SET users=\''+JSON.stringify(existingUsers)+'\' WHERE id='+id)
+      .then((result) => {
+        res.send('Shared successfully');
+      });
   }
 });
 
-// catch form data
+
+// catch save character request
 app.post('/save_character', express.json(), (req, res) => {
-  // console.log(req.body);
-  // if (req.body.id) {
-  //   queryPromise('UPDATE soa_characters SET __ WHERE id='+req.body.id)
-  //     .then();
-  // }else {
-  //   queryPromise('INSERT INTO soa_characters (__) VALUES (__)')
-  //     .then();
-  // }
-  res.status(200).send("post successful");
+  var character = req.body;
+  if (character.id) {
+    soaAddCustoms(character)
+      .then((result) => {
+        var charid = character.id
+        delete character.id;
+        var response = queryPromiseArr('UPDATE soa_characters SET ? WHERE id=?',[character,charid]);
+        return response;
+      })
+      .then((result) => {
+        console.log('Existing Character Updated');
+        res.status(200).send("save successful");
+      });
+  }else {
+    soaAddCustoms(character)
+      .then((result) => {
+        if (req.session.loggedin) {
+          // add user
+          character['users'] = [req.session.username];
+          character.users = JSON.stringify(character.users);
+
+          // add character to database
+          queryPromiseArr('INSERT INTO soa_characters SET ?',[character])
+            .then((result) => {
+              console.log('New Character Saved');
+              res.status(200).send("save successful");
+            })
+        }else {
+          res.send("Must be logged in to save character");
+        }
+      });
+  }
 });
 
 // send raw data to client

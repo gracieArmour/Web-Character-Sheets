@@ -284,6 +284,11 @@ document.getElementById("share-modal-button").addEventListener("click", sendShar
 // save logic
 var submitButton = document.getElementById("saveButton");
 
+function normalizeStr(str) {
+	var normal = isNaN(Number(str)) ? str : Number(str);
+	return normal;
+}
+
 async function sendSave(data) {
 	var response = await fetch('/save_character', {
 		method: 'POST',
@@ -292,8 +297,9 @@ async function sendSave(data) {
 		},
 		body: JSON.stringify(data)
 	});
+	var responseText = await response.text();
 
-	console.log(response);
+	console.log(responseText);
 }
 
 submitButton.addEventListener('click', function() {
@@ -317,25 +323,35 @@ submitButton.addEventListener('click', function() {
 		}else if (elem.classList.contains("save-playbooks")) {
 			o['playbooks'].push(elem.dataset.playbookname);
 		}else if (elem.classList.contains("save-stats")) {
-			o['stat_'+elem.id.split('-')[1].toLowerCase()] = elem.querySelector('.stat-value').value;
-			o['debility_'+elem.querySelector('.debility-container').id.split('-')[1].toLowerCase()] = elem.querySelector('.debility-checkbox').checked;
+			o['stat_'+elem.id.split('-')[1].toLowerCase()] = Number(elem.querySelector('.stat-value').value);
+			o['debility_'+elem.querySelector('.debility-container').id.split('-')[1].toLowerCase()] = elem.querySelector('.debility-checkbox').checked ? 1 : 0;
 		}else if (elem.classList.contains("save-hp")) {
-			o['current_hp'] = elem.querySelector('#hp-slider').value;
-			o['max_hp'] = elem.querySelector('#hp-slider').max;
+			o['current_hp'] = Number(elem.querySelector('#hp-slider').value);
+			o['max_hp'] = Number(elem.querySelector('#hp-slider').max);
 		}else if (elem.classList.contains("save-equipment")) {
-			o['equipment'].push({id: elem.dataset.equipid, uses: elem.querySelector('.item-uses input').value});
+			o['equipment'].push({id: Number(elem.dataset.equipid), uses: Number(elem.querySelector('.item-uses input').value)});
 		}else if (elem.classList.contains("save-customEquips")) {
-			o['customEquips'].push({name: elem.querySelector('.item-name-container label input').value, description: elem.querySelector('.entry-description').textContent, base_uses: elem.querySelector('.item-uses input').value, type: elem.querySelector('.item-name-container>input').value, cost: 0, is_custom: 1});
+			o['customEquips'].push({name: elem.querySelector('.item-name-container label input').value, description: elem.querySelector('.entry-description').textContent, base_uses: Number(elem.querySelector('.item-uses input').value), type: elem.querySelector('.item-name-container>input').value, cost: 0, is_custom: 1});
 		}else if (elem.classList.contains("save-moves")) {
-			o['moves'].push(elem.dataset.moveid);
+			o['moves'].push(Number(elem.dataset.moveid));
 		}else if (elem.classList.contains("save-customMoves")) {
 			o['customMoves'].push({name: elem.querySelector('.move-name-container label input').value, description: elem.querySelector('.entry-description').textContent, type: elem.querySelector('.move-name-container>input').value, prereq_level: 0, prereq_move: 0, source: "Custom"});
 		}else {
-			o[elem.name] = elem.value;
+			o[elem.name] = normalizeStr(elem.value);
 		}
 	});
 	o['notes'] = simplemde.value();
-	o['id'] = document.getElementById('character-sheet').dataset.charid;
+	o['id'] = Number(document.getElementById('character-sheet').dataset.charid);
+	if (o.name==0) {
+		delete o.name;
+	}
+
+	// stringify lists
+	o.basic_properties = JSON.stringify(o.basic_properties);
+	o.playbooks = JSON.stringify(o.playbooks);
+
+
+	console.log(JSON.parse(JSON.stringify(o)));
 
 	sendSave(o);
 });
