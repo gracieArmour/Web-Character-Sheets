@@ -71,7 +71,7 @@ textarea {
     top: 0;
     left: 0;
     border: none;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(124, 124, 124, 0.5);
     cursor: pointer;
 }
 
@@ -231,6 +231,17 @@ textarea {
 
 #hp-slider {
     width: 60px;
+}
+
+#max-hp-container {
+    display: flex;
+    flex-direction: row;
+}
+
+#max-hp-input {
+    width: 15px;
+    height: 15px;
+    margin-left: 3px;
 }
 
 /* Armor */

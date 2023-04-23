@@ -3,14 +3,26 @@
         <label>
             <input name="item-name" placeholder="Name" value="{{name}}"/>
         </label>
-        <input name="type" placeholder="Type" value="{{type}}"/>
+        <select name="type" value="{{type}}">
+            {{#if type}}
+            {{else}}
+                <option value="" selected disabled hidden>Type</option>
+            {{/if}}
+            <option value="Gear">Gear</option>
+            <option value="Remedies">Remedies</option>
+            <option value="Poison">Poison</option>
+        </select>
         <button class="delete-equipment-button">x</button>
     </div>
     <div class="item-info entry-info">
-        <textarea class="entry-description" name="item-description" placeholder="Description">{{desc}}</textarea>
+        <textarea class="entry-description" name="item-description" placeholder="Description">{{description}}</textarea>
         <div class="item-uses">
             <label>Uses</label>
             <input type="number" class="big-number" name="item-amount" value="{{uses}}"/>
         </div>
+    </div>
+    <div class="item-cost-container">
+        <label>Cost:</label>
+        <input class="big-number" name="item-cost" value="{{cost}}"/>
     </div>
 </div>

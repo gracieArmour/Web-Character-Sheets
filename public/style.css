@@ -119,6 +119,11 @@ header {
     margin-bottom: 30px;
 }
 
+/* util bar */
+#last-saved {
+    margin-top: 5px;
+}
+
 /* login popup */
 .modal-background {
     position: absolute;

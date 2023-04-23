@@ -30,7 +30,12 @@ document.getElementById("close-login").addEventListener("click", function() {
 async function sendLogin(type) {
     var usernameField = document.getElementById("login-username");
     var passwordField = document.getElementById("login-password");
-    var o = {username: usernameField.value, password: passwordField.value};
+    var o = {
+        username: usernameField.value,
+        password: passwordField.value,
+        userTZ: Intl.DateTimeFormat().resolvedOptions().timeZone
+    };
+
     var loginResponse = await fetch('/auth/'+type, {
         method: 'POST',
         headers: {

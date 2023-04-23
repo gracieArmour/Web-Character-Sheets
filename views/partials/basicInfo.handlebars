@@ -4,6 +4,7 @@
         <div id="character-img-container">
             <img id="character-img" class="savable save-img" name="image_url" src="{{image_url}}"/>
             <button id="character-img-edit-button" type="button">✎</button>
+            <input id="character-img-input" class="hidden" placeholder="Image URL" value="{{image_url}}" oninput="this.parentNode.childNodes[1].src = this.value"/>
         </div>
         
         <div id="character-properties-container">

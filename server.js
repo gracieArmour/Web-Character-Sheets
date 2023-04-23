@@ -257,7 +257,7 @@ app.get('/character/:sys/:charid', (req, res) => {
                 Object.keys(rows[0]).forEach(key => {
                   if (key=="id") {
                     responseContext.sheetContext['charID'] = rows[0][key];
-                  }else if (key=="moves" || key=="equipment") {
+                  }else if (key=="moves" || key=="equipment" || key=="created_at") {
                     // console.log(rows[0][key]);
                   }else if (key=="users" || key=="basic_properties" || key=="playbooks") {
                     responseContext.sheetContext[key] = JSON.parse(rows[0][key]);
@@ -268,6 +268,17 @@ app.get('/character/:sys/:charid', (req, res) => {
                       }else if (stat.debilityName.toUpperCase()==key.split("_")[1].toUpperCase()) {
                         stat['debilityValue'] = rows[0][key];
                       }
+                    });
+                  }else if (key=="last_updated") {
+                    responseContext.sheetContext[key] = new Date(rows[0][key]).toLocaleString('en-US',{
+                      timeZone: req.session.userTZ,
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric',
+                      weekday: 'short',
+                      hour12: true,
+                      hour: 'numeric',
+                      minute: 'numeric'
                     });
                   }else {
                     responseContext.sheetContext[key] = rows[0][key];
@@ -310,9 +321,9 @@ app.get('/character/:sys/:charid', (req, res) => {
 // authenticate login
 app.post('/auth/:loginType', express.json(), (req, res) => {
   var type = req.params.loginType;
-  console.log(req.body);
   var username = req.body.username;
   var password = req.body.password;
+  var userTZ = req.body.userTZ;
 
   if (username && password) {
     queryPromise('SELECT * FROM user_accounts WHERE username="'+username+'"')
@@ -322,6 +333,7 @@ app.post('/auth/:loginType', express.json(), (req, res) => {
             if (rows[0]['password']==password) {
               req.session.loggedin = true;
               req.session.username = username;
+              req.session.userTZ = userTZ;
               res.send('Logged in');
             }else {
               res.send('Incorrect password');
@@ -337,6 +349,7 @@ app.post('/auth/:loginType', express.json(), (req, res) => {
               .then((result) => {
                 req.session.loggedin = true;
                 req.session.username = username;
+                req.session.userTZ = userTZ;
                 res.send('Account created');
               });
           }
@@ -391,11 +404,22 @@ app.post('/save_character', express.json(), (req, res) => {
         var charid = character.id
         delete character.id;
         var response = queryPromiseArr('UPDATE soa_characters SET ? WHERE id=?',[character,charid]);
-        return response;
-      })
-      .then((result) => {
-        console.log('Existing Character Updated');
-        res.status(200).send("save successful");
+        response.then((result) => {
+          console.log('Existing Character updated by '+req.session.username);
+          queryPromise("SELECT last_updated FROM soa_characters WHERE id="+charid)
+            .then((rows) => {
+              res.status(200).send(new Date(rows[0].last_updated).toLocaleString('en-US',{
+                timeZone: req.session.userTZ,
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                weekday: 'short',
+                hour12: true,
+                hour: 'numeric',
+                minute: 'numeric'
+              }));
+            });
+        });
       });
   }else {
     soaAddCustoms(character)
@@ -406,13 +430,13 @@ app.post('/save_character', express.json(), (req, res) => {
           character.users = JSON.stringify(character.users);
 
           // add character to database
-          queryPromiseArr('INSERT INTO soa_characters SET ?',[character])
-            .then((result) => {
-              console.log('New Character Saved');
-              res.status(200).send("save successful");
-            })
+          var response = queryPromiseArr('INSERT INTO soa_characters SET ?',[character])
+          response.then((result) => {
+            console.log('New Character saved by '+req.session.username);
+            res.redirect(200,'/character/soa/'+result.insertId);
+          });
         }else {
-          res.send("Must be logged in to save character");
+          res.send("Must be logged in to create character");
         }
       });
   }

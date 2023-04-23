@@ -36,8 +36,12 @@
             <div id="combat-section" class="container">
                 <div id="hp-container" class="combat-container savable save-hp">
                     <label>Hit Points</label>
-                    <input id="hp-display" class="big-number" value="{{sheetContext.current_hp}}" oninput="this.nextElementSibling.value = this.value">
-                    <input id="hp-slider" type="range" value="{{sheetContext.current_hp}}" min="0" max="{{sheetContext.max_hp}}" oninput="this.previousElementSibling.value = this.value">
+                    <input id="hp-display" class="big-number" value="{{sheetContext.current_hp}}" oninput="this.nextElementSibling.value = this.value"/>
+                    <input id="hp-slider" type="range" value="{{sheetContext.current_hp}}" min="0" max="{{sheetContext.max_hp}}" oninput="this.previousElementSibling.value = this.value"/>
+                    <div id="max-hp-container">
+                        <label>Max:</label>
+                        <input id="max-hp-input" class="big-number" value="{{sheetContext.max_hp}}" oninput="this.parentNode.previousElementSibling.max = this.value"/>
+                    </div>
                 </div>
 
                 <div id="armor-container" class="combat-container">

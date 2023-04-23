@@ -10,11 +10,6 @@ async function getData() {
 	// moves
 	var moveResponse = await fetch('/database/AllMoves', {method: 'POST'});
 	playbookMoveData = await moveResponse.json();
-
-	// playbooks
-	// var playbookReponse = await fetch('/database/AllPlaybooks', {method: 'POST'});
-	// allPlaybooks = await playbookReponse.json();
-	// console.log(allPlaybooks);
 }
 getData();
 
@@ -28,6 +23,10 @@ document.getElementById("add-basic-property-button").addEventListener("click", f
 	var section = document.getElementById('basic-properties-list');
 	section.insertAdjacentHTML('beforeend', newHTML);
 	refreshListeners();
+});
+
+document.getElementById("character-img-edit-button").addEventListener("click", function() {
+	document.getElementById("character-img-input").classList.toggle("hidden");
 });
 
 //playbook search
@@ -222,7 +221,6 @@ function equipmentFilter() {
 	var dropdownList = [...document.getElementsByClassName("equipment-list-entry")];
 	var equipmentList = [...document.getElementsByClassName("item-entry")].map(elem => {return elem.dataset.equipid});
 	var filterText = document.getElementById("equipment-search").value;
-	console.log(equipmentList);
 
 	for (var i = 0; i < dropdownList.length; i++) {
 		if (textFilter(dropdownList[i],filterText) || (equipmentList.includes(dropdownList[i].dataset.equipmentid))) {
@@ -259,7 +257,7 @@ async function sendShare() {
 	var existingUsers = [...document.querySelectorAll(".shared-entry label")];
 	var characterSheet = document.getElementById("character-sheet");
     var o = {newUser: shareUser.value, existingUsers: existingUsers.map(elem => elem.textContent)};
-	console.log('/share_character/soa/'+characterSheet.dataset.charid);
+	
     var shareResponse = await fetch('/share_character/soa/'+characterSheet.dataset.charid, {
         method: 'POST',
         headers: {
@@ -299,7 +297,8 @@ async function sendSave(data) {
 	});
 	var responseText = await response.text();
 
-	console.log(responseText);
+	document.querySelector("#last-saved em").textContent = responseText;
+	console.log("save complete");
 }
 
 submitButton.addEventListener('click', function() {
@@ -319,7 +318,12 @@ submitButton.addEventListener('click', function() {
 		}else if (elem.classList.contains("save-bProps")) {
 			o['basic_properties'].push({name:elem.name,value:elem.value});
 		}else if (elem.classList.contains("save-customProps")) {
-			o['basic_properties'].push({name: elem.childNodes.item("name").value, value: elem.childNodes.item("value").value});
+			if (elem.childNodes.item("name").value) {
+				o['basic_properties'].push({
+					name: elem.childNodes.item("name").value,
+					value: elem.childNodes.item("value").value
+				});
+			}
 		}else if (elem.classList.contains("save-playbooks")) {
 			o['playbooks'].push(elem.dataset.playbookname);
 		}else if (elem.classList.contains("save-stats")) {
@@ -329,13 +333,53 @@ submitButton.addEventListener('click', function() {
 			o['current_hp'] = Number(elem.querySelector('#hp-slider').value);
 			o['max_hp'] = Number(elem.querySelector('#hp-slider').max);
 		}else if (elem.classList.contains("save-equipment")) {
-			o['equipment'].push({id: Number(elem.dataset.equipid), uses: Number(elem.querySelector('.item-uses input').value)});
+			o['equipment'].push({
+				id: Number(elem.dataset.equipid),
+				uses: Number(elem.querySelector('.item-uses input').value)
+			});
 		}else if (elem.classList.contains("save-customEquips")) {
-			o['customEquips'].push({name: elem.querySelector('.item-name-container label input').value, description: elem.querySelector('.entry-description').textContent, base_uses: Number(elem.querySelector('.item-uses input').value), type: elem.querySelector('.item-name-container>input').value, cost: 0, is_custom: 1});
+			if (elem.querySelector('.item-name-container label input').value) {
+				o['customEquips'].push({
+					name: elem.querySelector('.item-name-container label input').value,
+					description: elem.querySelector('.entry-description').value,
+					base_uses: Number(elem.querySelector('.item-uses input').value),
+					cost: Number(elem.querySelector('.item-cost-container input').value),
+					type: elem.querySelector('.item-name-container select').value,
+					is_custom: 1
+				});
+			}
 		}else if (elem.classList.contains("save-moves")) {
 			o['moves'].push(Number(elem.dataset.moveid));
 		}else if (elem.classList.contains("save-customMoves")) {
-			o['customMoves'].push({name: elem.querySelector('.move-name-container label input').value, description: elem.querySelector('.entry-description').textContent, type: elem.querySelector('.move-name-container>input').value, prereq_level: 0, prereq_move: 0, source: "Custom"});
+			if (elem.querySelector('.move-name-container label input').value) {
+				var moveType, levelReq;
+				switch (elem.querySelector('.move-name-container select').value) {
+					case "Starting Character":
+						moveType = "Character";
+						levelReq = 0;
+						break;
+					case "5th Lvl Character":
+						moveType = "Character";
+						levelReq = 5;
+						break;
+					case "6th Lvl Advanced":
+						moveType = "Advanced";
+						levelReq = 6;
+						break;
+					default:
+						moveType = elem.querySelector('.move-name-container select').value;
+						levelReq = 0;
+				}
+
+				o['customMoves'].push({
+					name: elem.querySelector('.move-name-container label input').value,
+					description: elem.querySelector('.entry-description').value,
+					type: moveType,
+					prereq_level: levelReq,
+					prereq_move: 0,
+					source: "Custom"
+				});
+			}
 		}else {
 			o[elem.name] = normalizeStr(elem.value);
 		}
@@ -350,45 +394,16 @@ submitButton.addEventListener('click', function() {
 	o.basic_properties = JSON.stringify(o.basic_properties);
 	o.playbooks = JSON.stringify(o.playbooks);
 
-
-	console.log(JSON.parse(JSON.stringify(o)));
-
 	sendSave(o);
 });
 
 
 // Leave warning
 window.addEventListener('beforeunload', function(e) {
-	const warning = "Changes you made may not be saved.";
-    e.returnValue = warning;
-    return warning;
+	var sinceSave = Math.abs((new Date()) - new Date(document.querySelector("#last-saved em").textContent)) / 60000;
+	if (sinceSave > 1) {
+		const warning = "Changes you made may not be saved.";
+		e.returnValue = warning;
+		return warning;
+	}
 });
-
-
-// var formElem = document.getElementById("character-sheet");
-// var submitButton = document.getElementById("saveButton");
-
-// submitButton.addEventListener('click',e => {
-//     e.preventDefault();
-//     var o = {};
-//     new FormData( formElem ).forEach(( value, key ) => o[key] = value );
-//     fetch('/save_character', {
-//         method: 'POST',
-//         headers: {
-//             'Content-Type': 'application/json'
-//         },
-//         body: JSON.stringify(o)
-//     })
-// })
-
-// var header = document.getElementById("site-header");
-
-// header.addEventListener('click', e => {
-// 	console.log(simplemde.value());
-// });
-
-// header.addEventListener('click', e => {
-//     fetch('/database', {
-//         method: 'POST'
-//     })
-// });

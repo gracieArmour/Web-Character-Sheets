@@ -1,13 +1,25 @@
-<div class="entry move-entry savable save-customMoves" data-moveid="{{id}}">
+<div class="entry move-entry savable save-customMoves">
     <div class="move-name-container">
         <label>
             <input name="move-name" placeholder="Name" value="{{name}}"/>
         </label>
-        <input name="type" placeholder="Type" value="{{type}}"/>
+        <select name="type" value="{{type}}">
+            {{#if type}}
+            {{else}}
+                <option value="" selected disabled hidden>Move Type</option>
+            {{/if}}
+            <option>Background</option>
+            <option>Starting Character</option>
+            <option>5th Lvl Character</option>
+            <option>Core</option>
+            <option>Advanced</option>
+            <option>6th Lvl Advanced</option>
+            <option>School</option>
+            <option>Invocation</option>
+        </select>
         <button class="delete-move-button">x</button>
     </div>
     <div class="move-info entry-info">
         <textarea class="entry-description" name="move-description" placeholder="Description">{{description}}</textarea>
-        <input name="move-source" placeholder="Source" value="{{source}}"/>
     </div>
 </div>
