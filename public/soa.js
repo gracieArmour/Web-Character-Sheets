@@ -1,134 +1,6 @@
 console.log("soa js loaded");
 
 
-// send autosaves
-window.onload = function () {
-    if (JSON.parse(getCookie('charAutosavePending'))) {
-        sendSave(JSON.parse(getCookie('charAutosave')))
-            .then((result) => {
-				console.log(result);
-                if (new Date(result) != "Invalid Date") {
-                    setCookie('charAutosavePending',false);
-                }
-            });
-    }
-}
-
-
-// get playbook data
-var allEquipmentData, playbookMoveData, allPlaybooks;
-async function getData() {
-	// equipment
-	var equipmentResponse = await fetch('/database/AllEquipment', {method: 'POST'});
-	allEquipmentData = await equipmentResponse.json();
-
-	// moves
-	var moveResponse = await fetch('/database/AllMoves', {method: 'POST'});
-	playbookMoveData = await moveResponse.json();
-}
-getData();
-
-
-// notes section
-var simplemde = new SimpleMDE({ element: document.getElementById("character-notes") });
-
-
-// STATIC LISTENERS
-document.getElementById("add-basic-property-button").addEventListener("click", function () {
-	let newHTML = Handlebars.templates.basicPropertyEntry({});
-	var section = document.getElementById('basic-properties-list');
-	section.insertAdjacentHTML('beforeend', newHTML);
-	refreshListeners();
-});
-
-document.getElementById("character-img-edit-button").addEventListener("click", function() {
-	document.getElementById("character-img-input").classList.toggle("hidden");
-});
-
-//playbook search
-var playbookListDropdown = document.getElementById("playbook-dropdown");
-
-document.getElementById("playbook-search").addEventListener("focusin", function () {
-	playbookListDropdown.classList.remove("hidden");
-	playbookFilter();
-});
-
-document.getElementById("playbook-search").addEventListener("focusout", function () {
-	setTimeout(function() {
-		playbookListDropdown.classList.add("hidden");
-	},100);
-});
-
-[...document.getElementsByClassName("playbook-list-entry")].forEach(elem => {
-	elem.addEventListener("click", function() {
-		let newHTML = Handlebars.templates.soaPlaybookEntry(elem.textContent);
-		var section = document.getElementById('playbook-list');
-		section.insertAdjacentHTML('beforeend', newHTML);
-		refreshListeners();
-	})
-});
-
-// equipment search
-var equipmentListDropdown = document.getElementById("equipment-dropdown");
-
-document.getElementById("equipment-search").addEventListener("focusin", function () {
-	equipmentListDropdown.classList.remove("hidden");
-	equipmentFilter();
-});
-
-document.getElementById("equipment-search").addEventListener("focusout", function () {
-	setTimeout(function() {
-		equipmentListDropdown.classList.add("hidden");
-	}, 100);
-});
-
-[...document.getElementsByClassName("equipment-list-entry")].forEach(elem => {
-	elem.addEventListener("click", function() {
-		let newHTML = Handlebars.templates.soaEquipmentEntry(allEquipmentData[elem.dataset.equipmentid]);
-		var section = document.getElementById('equipment-list');
-		section.insertAdjacentHTML('beforeend', newHTML);
-		refreshListeners();
-	})
-});
-
-document.getElementById("add-equipment-button").addEventListener("click", function () {
-	let newHTML = Handlebars.templates.soaCustomEquipmentEntry({});
-	var section = document.getElementById('equipment-list');
-	section.insertAdjacentHTML('beforeend', newHTML);
-	refreshListeners();
-});
-
-// move search
-var moveListDropdown = document.getElementById("move-dropdown");
-
-document.getElementById("move-search").addEventListener("focusin", function () {
-	moveListDropdown.classList.remove("hidden");
-	moveFilter();
-});
-
-document.getElementById("move-search").addEventListener("focusout", function () {
-	setTimeout(function() {
-		moveListDropdown.classList.add("hidden");
-	}, 100);
-});
-
-[...document.getElementsByClassName("move-list-entry")].forEach(elem => {
-	elem.addEventListener("click", function() {
-		let newHTML = Handlebars.templates.soaMoveEntry(playbookMoveData[elem.dataset.moveid]);
-		var section = document.getElementById('move-list');
-		section.insertAdjacentHTML('beforeend', newHTML);
-		refreshListeners();
-	})
-});
-
-document.getElementById("add-move-button").addEventListener("click", function () {
-	let newHTML = Handlebars.templates.soaCustomMoveEntry({});
-	var section = document.getElementById('move-list');
-	section.insertAdjacentHTML('beforeend', newHTML);
-	refreshListeners();
-});
-
-
 // DYNAMIC LISTENERS
 var savables;
 function refreshListeners() {
@@ -152,137 +24,14 @@ function refreshListeners() {
 
 	savables = [...document.getElementsByClassName("savable")];
 	savables.forEach(elem => {
-		elem.addEventListener("change", function() {
-			setCookie('charAutosave',getCharData());
-			setCookie('charAutosavePending',true);
-		})
+		elem.addEventListener("change", makeAutosave);
 	});
 }
 refreshListeners();
 
-
-// dropdown logic
-function onpageFilter(item) {
-	var moveData = playbookMoveData[item.dataset.moveid];
-	var moveList = [...document.getElementsByClassName("move-entry")].map(elem => {return Number(elem.dataset.moveid)});
-	var invalid = false;
-	
-	// type selector
-	var selectedType = document.getElementById("move-type-selector").value;
-	if ((selectedType != "Any") && (moveData.type != selectedType)) {
-		invalid = true;
-	}
-
-	var selectedPlaybook = document.getElementById("move-playbook-selector").value;
-	if ((selectedPlaybook != "Any") && (moveData.source != selectedPlaybook)) {
-		invalid = true;
-	}
-
-	// already have move
-	if (moveList.includes(moveData.id)) {
-		invalid = true;
-	}
-
-	return invalid;
-}
-
-function rulesFilter(item) {
-	var classlessMode = !(document.getElementById("classless-toggle").checked);
-	var moveData = playbookMoveData[item.dataset.moveid];
-	var moveList = [...document.getElementsByClassName("move-entry")];
-	var playbookList = [...document.querySelectorAll(".playbook-entry label")];
-	var charLevel = document.getElementById("level-value").value;
-	var invalid = false;
-
-	// check if valid playbook
-	if ((playbookList.length > 0) && !(playbookList.map(elem => {return elem.textContent}).includes(moveData.source)) && (moveData.source != "Custom")) {
-		invalid = true;
-	}
-
-	// check if valid prereqs
-	if (moveData.prereq_level > charLevel) {
-		invalid = true;
-	}
-	
-	if (!(moveList.map(elem => {return elem.dataset.moveid}).includes(moveData.prereq_move)) && (moveData.prereq_move != 0)) {
-		invalid = true;
-	}
-
-	// check if second background available
-	var backgroundList = moveList.filter(move => {move.dataset.type == "Background"}).map(elem => {return elem.dataset.moveid});
-	if ((backgroundList != []) && (moveData.type == "Background") && (charLevel < 6)) {
-		invalid = true;
-	}
-
-	return invalid && classlessMode;
-}
-
-function textFilter(item,filter) {
-	var invalid = true;
-	
-	// check if name contains current search input
-	if (item.textContent.toUpperCase().indexOf(filter.toUpperCase()) > -1) {
-		invalid = false;
-	}
-
-	return invalid;
-}
-
-function playbookFilter() {
-	var dropdownList = [...document.getElementsByClassName("playbook-list-entry")];
-	var playbookList = [...document.getElementsByClassName("playbook-entry")].map(elem => {return elem.dataset.playbookname});
-	var filterText = document.getElementById("playbook-search").value;
-
-	for (var i = 0; i < dropdownList.length; i++) {
-		if (textFilter(dropdownList[i],filterText) || (playbookList.includes(dropdownList[i].textContent))) {
-			dropdownList[i].style.display = "none";
-		} else {
-			dropdownList[i].style.display = "";
-		}
-	}
-}
-
-function equipmentFilter() {
-	var dropdownList = [...document.getElementsByClassName("equipment-list-entry")];
-	var equipmentList = [...document.getElementsByClassName("item-entry")].map(elem => {return elem.dataset.equipid});
-	var filterText = document.getElementById("equipment-search").value;
-
-	for (var i = 0; i < dropdownList.length; i++) {
-		if (textFilter(dropdownList[i],filterText) || (equipmentList.includes(dropdownList[i].dataset.equipmentid))) {
-			dropdownList[i].style.display = "none";
-		} else {
-			dropdownList[i].style.display = "";
-		}
-	}
-}
-
-function moveFilter() {
-	var dropdownList = [...document.getElementsByClassName("move-list-entry")];
-	var filterText = document.getElementById("move-search").value;
-
-	for (var i = 0; i < dropdownList.length; i++) {
-		if (onpageFilter(dropdownList[i]) || rulesFilter(dropdownList[i]) || textFilter(dropdownList[i],filterText)) {
-			dropdownList[i].style.display = "none";
-		} else {
-			dropdownList[i].style.display = "flex";
-		}
-	}
-}
-
-
-// share logic
-[...document.getElementsByClassName("delete-user-button")].forEach(elem => {
-	elem.addEventListener("click", (event) => {
-		event.target.closest(".shared-entry").remove();
-	})
-});
-
-
-document.getElementById("share-modal-button").addEventListener("click", sendShare.bind(null,'soa'));
-
-
 // save logic
 function getCharData() {
+	refreshListeners();
 	var o = {
 		basic_properties: [],
 		playbooks: [],
@@ -376,6 +125,262 @@ function getCharData() {
 
 	return o;
 }
+
+// autosave
+function makeAutosave() {
+	setCookie('charAutosave',getCharData());
+	setCookie('charAutosavePending',true);
+	console.log(document.cookie);
+}
+
+
+// send autosaves
+window.onload = function () {
+    if (JSON.parse(getCookie('charAutosavePending'))) {
+        sendSave(JSON.parse(getCookie('charAutosave')))
+            .then((result) => {
+				console.log(result);
+                if (new Date(result) != "Invalid Date") {
+                    setCookie('charAutosavePending',false);
+                }
+            });
+    }
+}
+
+
+// get playbook data
+var allEquipmentData, playbookMoveData, allPlaybooks;
+async function getData() {
+	// equipment
+	var equipmentResponse = await fetch('/database/AllEquipment', {method: 'POST'});
+	allEquipmentData = await equipmentResponse.json();
+
+	// moves
+	var moveResponse = await fetch('/database/AllMoves', {method: 'POST'});
+	playbookMoveData = await moveResponse.json();
+}
+getData();
+
+
+// notes section
+var simplemde = new SimpleMDE({ element: document.getElementById("character-notes") });
+
+
+// STATIC LISTENERS
+document.getElementById("add-basic-property-button").addEventListener("click", function () {
+	let newHTML = Handlebars.templates.basicPropertyEntry({});
+	var section = document.getElementById('basic-properties-list');
+	section.insertAdjacentHTML('beforeend', newHTML);
+	makeAutosave();
+});
+
+document.getElementById("character-img-edit-button").addEventListener("click", function() {
+	document.getElementById("character-img-input").classList.toggle("hidden");
+});
+
+//playbook search
+var playbookListDropdown = document.getElementById("playbook-dropdown");
+
+document.getElementById("playbook-search").addEventListener("focusin", function () {
+	playbookListDropdown.classList.remove("hidden");
+	playbookFilter();
+});
+
+document.getElementById("playbook-search").addEventListener("focusout", function () {
+	setTimeout(function() {
+		playbookListDropdown.classList.add("hidden");
+	},100);
+});
+
+[...document.getElementsByClassName("playbook-list-entry")].forEach(elem => {
+	elem.addEventListener("click", function() {
+		let newHTML = Handlebars.templates.soaPlaybookEntry(elem.textContent);
+		var section = document.getElementById('playbook-list');
+		section.insertAdjacentHTML('beforeend', newHTML);
+		makeAutosave();
+	})
+});
+
+// equipment search
+var equipmentListDropdown = document.getElementById("equipment-dropdown");
+
+document.getElementById("equipment-search").addEventListener("focusin", function () {
+	equipmentListDropdown.classList.remove("hidden");
+	equipmentFilter();
+});
+
+document.getElementById("equipment-search").addEventListener("focusout", function () {
+	setTimeout(function() {
+		equipmentListDropdown.classList.add("hidden");
+	}, 100);
+});
+
+[...document.getElementsByClassName("equipment-list-entry")].forEach(elem => {
+	elem.addEventListener("click", function() {
+		let newHTML = Handlebars.templates.soaEquipmentEntry(allEquipmentData[elem.dataset.equipmentid]);
+		var section = document.getElementById('equipment-list');
+		section.insertAdjacentHTML('beforeend', newHTML);
+		makeAutosave();
+	})
+});
+
+document.getElementById("add-equipment-button").addEventListener("click", function () {
+	let newHTML = Handlebars.templates.soaCustomEquipmentEntry({});
+	var section = document.getElementById('equipment-list');
+	section.insertAdjacentHTML('beforeend', newHTML);
+	makeAutosave();
+});
+
+// move search
+var moveListDropdown = document.getElementById("move-dropdown");
+
+document.getElementById("move-search").addEventListener("focusin", function () {
+	moveListDropdown.classList.remove("hidden");
+	moveFilter();
+});
+
+document.getElementById("move-search").addEventListener("focusout", function () {
+	setTimeout(function() {
+		moveListDropdown.classList.add("hidden");
+	}, 100);
+});
+
+[...document.getElementsByClassName("move-list-entry")].forEach(elem => {
+	elem.addEventListener("click", function() {
+		let newHTML = Handlebars.templates.soaMoveEntry(playbookMoveData[elem.dataset.moveid]);
+		var section = document.getElementById('move-list');
+		section.insertAdjacentHTML('beforeend', newHTML);
+		makeAutosave();
+	})
+});
+
+document.getElementById("add-move-button").addEventListener("click", function () {
+	let newHTML = Handlebars.templates.soaCustomMoveEntry({});
+	var section = document.getElementById('move-list');
+	section.insertAdjacentHTML('beforeend', newHTML);
+	makeAutosave();
+});
+
+
+// dropdown logic
+function onpageFilter(item) {
+	var moveData = playbookMoveData[item.dataset.moveid];
+	var moveList = [...document.getElementsByClassName("move-entry")].map(elem => {return Number(elem.dataset.moveid)});
+	var invalid = false;
+	
+	// type selector
+	var selectedType = document.getElementById("move-type-selector").value;
+	if ((selectedType != "Any") && (moveData.type != selectedType)) {
+		invalid = true;
+	}
+
+	var selectedPlaybook = document.getElementById("move-playbook-selector").value;
+	if ((selectedPlaybook != "Any") && (moveData.source != selectedPlaybook)) {
+		invalid = true;
+	}
+
+	// already have move
+	if (moveList.includes(moveData.id)) {
+		invalid = true;
+	}
+
+	return invalid;
+}
+
+function rulesFilter(item) {
+	var classlessMode = !(document.getElementById("classless-toggle").checked);
+	var moveData = playbookMoveData[item.dataset.moveid];
+	var moveList = [...document.getElementsByClassName("move-entry")];
+	var playbookList = [...document.querySelectorAll(".playbook-entry label")];
+	var charLevel = Number(document.getElementById("level-value").value);
+	var invalid = false;
+
+	// check if valid playbook
+	if ((playbookList.length > 0) && !(playbookList.map(elem => {return elem.textContent}).includes(moveData.source)) && (moveData.source != "Custom")) {
+		invalid = true;
+	}
+
+	// check if valid prereqs
+	if (moveData.prereq_level > charLevel) {
+		invalid = true;
+	}
+	
+	if (!(moveList.map(elem => {return elem.dataset.moveid}).includes(moveData.prereq_move)) && (moveData.prereq_move != 0)) {
+		invalid = true;
+	}
+
+	// check if second background available
+	var backgroundList = moveList.filter(move => {move.dataset.type == "Background"}).map(elem => {return elem.dataset.moveid});
+	if ((backgroundList != []) && (moveData.type == "Background") && (charLevel < 6)) {
+		invalid = true;
+	}
+
+	return invalid && classlessMode;
+}
+
+function textFilter(item,filter) {
+	var invalid = true;
+	
+	// check if name contains current search input
+	if (item.textContent.toUpperCase().indexOf(filter.toUpperCase()) > -1) {
+		invalid = false;
+	}
+
+	return invalid;
+}
+
+function playbookFilter() {
+	var dropdownList = [...document.getElementsByClassName("playbook-list-entry")];
+	var playbookList = [...document.getElementsByClassName("playbook-entry")].map(elem => {return elem.dataset.playbookname});
+	var filterText = document.getElementById("playbook-search").value;
+
+	for (var i = 0; i < dropdownList.length; i++) {
+		if (textFilter(dropdownList[i],filterText) || (playbookList.includes(dropdownList[i].textContent))) {
+			dropdownList[i].style.display = "none";
+		} else {
+			dropdownList[i].style.display = "";
+		}
+	}
+}
+
+function equipmentFilter() {
+	var dropdownList = [...document.getElementsByClassName("equipment-list-entry")];
+	var equipmentList = [...document.getElementsByClassName("item-entry")].map(elem => {return elem.dataset.equipid});
+	var filterText = document.getElementById("equipment-search").value;
+
+	for (var i = 0; i < dropdownList.length; i++) {
+		if (textFilter(dropdownList[i],filterText) || (equipmentList.includes(dropdownList[i].dataset.equipmentid))) {
+			dropdownList[i].style.display = "none";
+		} else {
+			dropdownList[i].style.display = "";
+		}
+	}
+}
+
+function moveFilter() {
+	var dropdownList = [...document.getElementsByClassName("move-list-entry")];
+	var filterText = document.getElementById("move-search").value;
+
+	for (var i = 0; i < dropdownList.length; i++) {
+		if (onpageFilter(dropdownList[i]) || rulesFilter(dropdownList[i]) || textFilter(dropdownList[i],filterText)) {
+			dropdownList[i].style.display = "none";
+		} else {
+			dropdownList[i].style.display = "flex";
+		}
+	}
+}
+
+
+// share logic
+[...document.getElementsByClassName("delete-user-button")].forEach(elem => {
+	elem.addEventListener("click", (event) => {
+		event.target.closest(".shared-entry").remove();
+	})
+});
+
+
+document.getElementById("share-modal-button").addEventListener("click", sendShare.bind(null,'soa'));
+
 
 document.getElementById("saveButton").addEventListener('click', function() {
 	sendSave(getCharData())

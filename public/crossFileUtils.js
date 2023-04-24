@@ -61,5 +61,5 @@ function normalizeStr(str) {
 }
 
 if (typeof module !== 'undefined') {
-	module.exports = {setCookie, getCookie, sendSave, sendShare, normalizeStr};
+	module.exports = {setCookie, getCookie, makeAutosave, sendSave, sendShare, normalizeStr};
 }
