@@ -164,7 +164,7 @@ getData();
 
 // notes section
 var simplemde = new SimpleMDE({ element: document.getElementById("character-notes") });
-
+simplemde.togglePreview();
 
 // STATIC LISTENERS
 document.getElementById("add-basic-property-button").addEventListener("click", function () {
