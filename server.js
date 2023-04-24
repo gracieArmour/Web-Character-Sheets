@@ -169,11 +169,12 @@ async function soaGetListData(context) {
   return [equipRows,moveRows];
 }
 
-async function soaAddCustoms(char) {
+async function soaAddCustoms(char,user) {
   if (char.customEquips) {
     for (const item of char.customEquips) {
       var response = await queryPromiseArr("INSERT INTO soa_equipment SET ?", [item]);
       char.equipment.push({id: response.insertId, uses: item.base_uses});
+      console.log("New soa item (id="+response.insertId+") created by "+user);
     }
   }
 
@@ -181,6 +182,7 @@ async function soaAddCustoms(char) {
     for (const move of char.customMoves) {
       var response = await queryPromiseArr("INSERT INTO soa_moves SET ?", [move]);
       char['moves'].push(response.insertId);
+      console.log("New soa move (id="+response.insertId+") created by "+user);
     }
   }
 
@@ -370,7 +372,9 @@ app.post('/share_character/:sys/:id', express.json(), (req,res) => {
     queryPromise('SELECT * FROM user_accounts WHERE username="'+newUser+'"')
       .then((rows) => {
         if (rows.length > 0) {
-          existingUsers.push(newUser);
+          if (!existingUsers.includes(newUser)) {
+            existingUsers.push(newUser);
+          }
           if (!(existingUsers.includes(req.session.username))) {
             existingUsers.push(req.session.username);
           }
@@ -432,7 +436,7 @@ app.post('/save_character', express.json(), (req, res) => {
           var response = queryPromiseArr('INSERT INTO soa_characters SET ?',[character])
           response.then((result) => {
             console.log('New Character saved by '+req.session.username);
-            res.redirect(200,'/character/soa/'+result.insertId);
+            res.status(200).send('/character/soa/'+result.insertId);
           });
         }else {
           res.send("Must be logged in to create character");

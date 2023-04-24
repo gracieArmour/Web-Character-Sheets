@@ -1,6 +1,20 @@
 console.log("soa js loaded");
 
 
+// send autosaves
+window.onload = function () {
+    if (JSON.parse(getCookie('charAutosavePending'))) {
+        sendSave(JSON.parse(getCookie('charAutosave')))
+            .then((result) => {
+				console.log(result);
+                if (new Date(result) != "Invalid Date") {
+                    setCookie('charAutosavePending',false);
+                }
+            });
+    }
+}
+
+
 // get playbook data
 var allEquipmentData, playbookMoveData, allPlaybooks;
 async function getData() {
@@ -263,31 +277,8 @@ function moveFilter() {
 	})
 });
 
-async function sendShare() {
-	var shareUser = document.getElementById("share-username");
-	var existingUsers = [...document.querySelectorAll(".shared-entry label")];
-	var characterSheet = document.getElementById("character-sheet");
-    var o = {newUser: shareUser.value, existingUsers: existingUsers.map(elem => elem.textContent)};
-	
-    var shareResponse = await fetch('/share_character/soa/'+characterSheet.dataset.charid, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(o)
-    });
-    var shareReply = await shareResponse.text();
 
-    if (shareReply=="Shared successfully") {
-        location.reload();
-    }else {
-        document.getElementById("share-message").textContent = shareReply;
-    }
-    console.log(shareReply);
-}
-
-
-document.getElementById("share-modal-button").addEventListener("click", sendShare);
+document.getElementById("share-modal-button").addEventListener("click", sendShare.bind(null,'soa'));
 
 
 // save logic
@@ -389,7 +380,9 @@ function getCharData() {
 document.getElementById("saveButton").addEventListener('click', function() {
 	sendSave(getCharData())
 		.then((result) => {
-			if (new Date(result)=="Invalid Date") {
+			if (result.includes("/character")) {
+				window.location.href = result;
+			}else if (new Date(result)=="Invalid Date") {
 				document.getElementById("save-warning").textContent = result;
 			}else {
 				document.querySelector("#last-saved em").textContent = result;
