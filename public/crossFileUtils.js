@@ -3,7 +3,6 @@ function setCookie(name,value) {
 	const currentDate = new Date();
 	const expireDate = new Date(currentDate.setDate(currentDate.getDate() + 1)).toUTCString();
 	document.cookie = name + '=' + JSON.stringify(value) + '; expires=' + expireDate +';';
-    console.log(document.cookie);
 }
 
 function getCookie(name) {

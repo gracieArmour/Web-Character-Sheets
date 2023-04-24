@@ -25,6 +25,11 @@
                     <label>Level</label>
                     <input id="level-value" class="big-number savable" name="level" value="{{sheetContext.level}}">
                 </div>
+
+                <div id="xp-container">
+                    <label>XP</label>
+                    <input id="xp-value" class="big-number savable" type="number" name="xp" value="{{sheetContext.xp}}">
+                </div>
             </div>
 
             <div id="stats-section" class="container">
@@ -56,16 +61,24 @@
             </div>
 
             <div id="equipment-section" class="container list-section">
-                <label>Equipment</label>
-                <div id="equipment-dropdown-container" class="dropdown-container">
-                        <input id="equipment-search" class="search-bar dropdown-toggle" placeholder="search" onkeyup="equipmentFilter()">
-                        <div id="equipment-dropdown" class="dropdown-list hidden">
-                            {{#each sheetContext.allEquipment}}
-                                <div class="equipment-list-entry" data-equipmentid="{{id}}" data-type="{{type}}" data-custom="{{is_cutom}}">{{name}}</div>
-                            {{/each}}
+                <div id="equipment-upper-container">
+                    <div id="equipment-control-container">
+                        <label>Equipment</label>
+                        <div id="equipment-dropdown-container" class="dropdown-container">
+                            <input id="equipment-search" class="search-bar dropdown-toggle" placeholder="search" onkeyup="equipmentFilter()">
+                            <div id="equipment-dropdown" class="dropdown-list hidden">
+                                {{#each sheetContext.allEquipment}}
+                                    <div class="equipment-list-entry" data-equipmentid="{{id}}" data-type="{{type}}" data-custom="{{is_cutom}}">{{name}}</div>
+                                {{/each}}
+                            </div>
                         </div>
+                        <button class="add-button" id="add-equipment-button" type="button">Add Item</button>
                     </div>
-                <button class="add-button" id="add-equipment-button" type="button">Add Item</button>
+                    <div id="wealth-container">
+                        <label>Wealth</label>
+                        <input id="wealth-value" class="big-number savable" type="number" name="wealth" value="{{sheetContext.wealth}}">
+                    </div>
+                </div>
                 <div id="equipment-list" class="list">
                     {{#each sheetContext.equipment}}
                         {{> soaEquipmentEntry}}
@@ -107,7 +120,7 @@
                         </select>
                     </div>
                     <div id="classless-toggle-container" class="move-filter">
-                        <label>Classless Mode</label>
+                        <label>Classless Mode:</label>
                         <input id="classless-toggle" type="checkbox">
                     </div>
                 </div>
