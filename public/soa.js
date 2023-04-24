@@ -1,5 +1,6 @@
 console.log("soa js loaded");
 
+
 // get playbook data
 var allEquipmentData, playbookMoveData, allPlaybooks;
 async function getData() {
@@ -12,6 +13,7 @@ async function getData() {
 	playbookMoveData = await moveResponse.json();
 }
 getData();
+
 
 // notes section
 var simplemde = new SimpleMDE({ element: document.getElementById("character-notes") });
@@ -114,6 +116,7 @@ document.getElementById("add-move-button").addEventListener("click", function ()
 
 
 // DYNAMIC LISTENERS
+var savables;
 function refreshListeners() {
 	[...document.getElementsByClassName("delete-playbook-button")].forEach(elem => {
 		elem.addEventListener("click", (event) => {
@@ -130,6 +133,14 @@ function refreshListeners() {
 	[...document.getElementsByClassName("delete-move-button")].forEach(elem => {
 		elem.addEventListener("click", (event) => {
 			event.target.closest(".move-entry").remove();
+		})
+	});
+
+	savables = [...document.getElementsByClassName("savable")];
+	savables.forEach(elem => {
+		elem.addEventListener("change", function() {
+			setCookie('charAutosave',getCharData());
+			setCookie('charAutosavePending',true);
 		})
 	});
 }
@@ -280,29 +291,7 @@ document.getElementById("share-modal-button").addEventListener("click", sendShar
 
 
 // save logic
-var submitButton = document.getElementById("saveButton");
-
-function normalizeStr(str) {
-	var normal = isNaN(Number(str)) ? str : Number(str);
-	return normal;
-}
-
-async function sendSave(data) {
-	var response = await fetch('/save_character', {
-		method: 'POST',
-		headers: {
-			'Content-Type': 'application/json'
-		},
-		body: JSON.stringify(data)
-	});
-	var responseText = await response.text();
-
-	document.querySelector("#last-saved em").textContent = responseText;
-	console.log("save complete");
-}
-
-submitButton.addEventListener('click', function() {
-	var savables = [...document.getElementsByClassName("savable")];
+function getCharData() {
 	var o = {
 		basic_properties: [],
 		playbooks: [],
@@ -394,16 +383,17 @@ submitButton.addEventListener('click', function() {
 	o.basic_properties = JSON.stringify(o.basic_properties);
 	o.playbooks = JSON.stringify(o.playbooks);
 
-	sendSave(o);
-});
+	return o;
+}
 
-
-// Leave warning
-window.addEventListener('beforeunload', function(e) {
-	var sinceSave = Math.abs((new Date()) - new Date(document.querySelector("#last-saved em").textContent)) / 60000;
-	if (sinceSave > 1) {
-		const warning = "Changes you made may not be saved.";
-		e.returnValue = warning;
-		return warning;
-	}
+document.getElementById("saveButton").addEventListener('click', function() {
+	sendSave(getCharData())
+		.then((result) => {
+			if (new Date(result)=="Invalid Date") {
+				document.getElementById("save-warning").textContent = result;
+			}else {
+				document.querySelector("#last-saved em").textContent = result;
+				setCookie('charAutosavePending',false);
+			}
+		});
 });

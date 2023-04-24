@@ -10,8 +10,7 @@ const exhandle = require('express-handlebars');
 const mysql = require('mysql');
 const fs = require('fs');
 const path = require('path');
-const { response } = require('express');
-// var db = require('./my_modules/db.js');
+const cfUtils = require('./public/crossFileUtils.js');
 
 // collect environmentally stored variables
 var port = process.env.PORT || 3000;

@@ -1,5 +1,23 @@
+const { getCookie } = require("./crossFileUtils");
+
 console.log("client-side js loaded");
 
+
+// send autosaves
+window.onload = function () {
+    console.log(document.cookie);
+    console.log(getCookie('charAutosave'));
+    console.log(getCookie('charAutosavePending'));
+    // if (JSON.parse(getCookie('charAutosavePending'))) {
+    //     sendSave(JSON.parse(getCookie('charAutosave')))
+    //         .then((result) => {
+    //             if (new Date(result) != "Invalid Date") {
+    //                 setCookie('charAutosavePending',false);
+    //             }
+    //             console.log(document.cookie);
+    //         });
+    // }
+}
 
 // nav listeners
 var navToggles = [...document.getElementsByClassName("dropdown-toggle")];

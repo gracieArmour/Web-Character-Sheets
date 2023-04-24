@@ -120,6 +120,11 @@ header {
 }
 
 /* util bar */
+#save-warning {
+    margin-top: 5px;
+    color: red;
+}
+
 #last-saved {
     margin-top: 5px;
 }

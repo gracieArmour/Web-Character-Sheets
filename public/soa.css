@@ -295,6 +295,7 @@ textarea {
 .entry-description {
     width: 500px;
     height: 100px;
+    white-space: pre-line;
 }
 
 
