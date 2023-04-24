@@ -1,21 +1,21 @@
-<div class="entry move-entry savable save-customMoves">
+<div class="entry move-entry savable save-customMoves" data-type="{{type}}">
     <div class="move-name-container">
         <label>
             <input name="move-name" placeholder="Name" value="{{name}}"/>
         </label>
-        <select name="type" value="{{type}}">
+        <select name="type" value="{{type}}" oninput="this.parentNode.parentNode.data-type = this.value">
             {{#if type}}
             {{else}}
                 <option value="" selected disabled hidden>Move Type</option>
             {{/if}}
-            <option>Background</option>
-            <option>Starting Character</option>
-            <option>5th Lvl Character</option>
-            <option>Core</option>
-            <option>Advanced</option>
-            <option>6th Lvl Advanced</option>
-            <option>School</option>
-            <option>Invocation</option>
+            <option value="Background">Background</option>
+            <option value="Starting Character">Starting Character</option>
+            <option value="5th Lvl Character">5th Lvl Character</option>
+            <option value="Core">Core</option>
+            <option value="Advanced">Advanced</option>
+            <option value="6th Lvl Advanced">6th Lvl Advanced</option>
+            <option value="School">School</option>
+            <option value="Invocation">Invocation</option>
         </select>
         <button class="delete-move-button">x</button>
     </div>

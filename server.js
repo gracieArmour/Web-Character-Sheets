@@ -137,6 +137,7 @@ async function soaGetListData(context) {
   var playbookRows = await queryPromise('SELECT DISTINCT source FROM soa_moves WHERE source<>"Custom"');
   var equipRows = await queryPromise('SELECT * FROM soa_equipment');
   var moveRows = await queryPromise('SELECT * FROM soa_moves');
+  var moveTypes = await queryPromise('SELECT DISTINCT type FROM soa_moves');
 
   // create allPlaybooks
   context.sheetContext["allPlaybooks"] = [];
@@ -165,6 +166,9 @@ async function soaGetListData(context) {
       name: row.name
     });
   });
+
+  // create moveTypes
+  context.sheetContext['moveTypes'] = moveTypes.map(row => row.type);
 
   return [equipRows,moveRows];
 }
@@ -402,7 +406,7 @@ app.post('/share_character/:sys/:id', express.json(), (req,res) => {
 app.post('/save_character', express.json(), (req, res) => {
   var character = req.body;
   if (character.id) {
-    soaAddCustoms(character)
+    soaAddCustoms(character,req.session.username)
       .then((result) => {
         var charid = character.id
         delete character.id;
@@ -425,7 +429,7 @@ app.post('/save_character', express.json(), (req, res) => {
         });
       });
   }else {
-    soaAddCustoms(character)
+    soaAddCustoms(character,req.session.username)
       .then((result) => {
         if (req.session.loggedin) {
           // add user

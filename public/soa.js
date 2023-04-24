@@ -305,13 +305,13 @@ function rulesFilter(item) {
 		invalid = true;
 	}
 	
-	if (!(moveList.map(elem => {return elem.dataset.moveid}).includes(moveData.prereq_move)) && (moveData.prereq_move != 0)) {
+	if (!(moveList.map(elem => Number(elem.dataset.moveid)).includes(moveData.prereq_move)) && (moveData.prereq_move != 0)) {
 		invalid = true;
 	}
 
 	// check if second background available
-	var backgroundList = moveList.filter(move => {move.dataset.type == "Background"}).map(elem => {return elem.dataset.moveid});
-	if ((backgroundList != []) && (moveData.type == "Background") && (charLevel < 6)) {
+	var backgroundList = moveList.filter(move => move.dataset.type == "Background");
+	if ((backgroundList.length > 0) && (moveData.type == "Background") && (charLevel < 6)) {
 		invalid = true;
 	}
 
