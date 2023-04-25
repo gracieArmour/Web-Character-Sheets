@@ -1,9 +1,12 @@
 <div class="entry move-entry savable save-moves" data-moveid="{{id}}" data-type="{{type}}">
     <div class="item-name-container">
         <label><a href="{{link}}">{{name}}</a></label>
+        <button class="collapse-move-button collapse-button">Expand</button>
         <button class="delete-move-button">x</button>
     </div>
-    <div class="entry-description">
-        {{description}}
+    <div class="move-info entry-info">
+        <div class="entry-description">
+            {{description}}
+        </div>
     </div>
 </div>

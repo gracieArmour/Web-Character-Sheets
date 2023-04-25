@@ -74,6 +74,7 @@
                         </div>
                         <button class="add-button" id="add-equipment-button" type="button">Add Item</button>
                     </div>
+                    <button id="collapse-all-equipment" class="collapse-button">Expand All</button>
                     <div id="wealth-container">
                         <label>Wealth</label>
                         <input id="wealth-value" class="big-number savable" type="number" name="wealth" value="{{sheetContext.wealth}}">
@@ -81,7 +82,11 @@
                 </div>
                 <div id="equipment-list" class="list">
                     {{#each sheetContext.equipment}}
-                        {{> soaEquipmentEntry}}
+                        {{#if is_custom}}
+                            {{> soaCustomEquipmentEntry}}
+                        {{else}}
+                            {{> soaEquipmentEntry}}
+                        {{/if}}
                     {{/each}}
                 </div>
             </div>
@@ -99,6 +104,8 @@
                             {{/each}}
                         </div>
                     </div>
+
+                    <button id="collapse-all-moves" class="collapse-button">Expand All</button>
 
                     <div id="move-type-selector-container" class="move-filter">
                         <label>Type</label>
@@ -127,7 +134,11 @@
                 <button class="add-button" id="add-move-button" type="button">New Move</button>
                 <div id="move-list" class="list">
                     {{#each sheetContext.moves}}
-                        {{> soaMoveEntry}}
+                        {{#if is_custom}}
+                            {{> soaCustomMoveEntry}}
+                        {{else}}
+                            {{> soaMoveEntry}}
+                        {{/if}}
                     {{/each}}
                 </div>
             </div>

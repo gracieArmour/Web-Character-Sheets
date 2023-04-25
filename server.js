@@ -175,18 +175,32 @@ async function soaGetListData(context) {
 
 async function soaAddCustoms(char,user) {
   if (char.customEquips) {
-    for (const item of char.customEquips) {
-      var response = await queryPromiseArr("INSERT INTO soa_equipment SET ?", [item]);
-      char.equipment.push({id: response.insertId, uses: item.base_uses});
-      console.log("New soa item (id="+response.insertId+") created by "+user);
+    for (var item of char.customEquips) {
+      if (item.id) {
+        var response = await queryPromiseArr('UPDATE soa_equipment SET ? WHERE id=?',[item,item.id]);
+        char.equipment.push({id: item.id, uses: item.base_uses});
+        console.log("Custom soa item (id="+item.id+") updated by "+user);
+      }else {
+        delete item.id;
+        var response = await queryPromiseArr("INSERT INTO soa_equipment SET ?", [item]);
+        char.equipment.push({id: response.insertId, uses: item.base_uses});
+        console.log("New soa item (id="+response.insertId+") created by "+user);
+      }
     }
   }
 
   if (char.customMoves) {
-    for (const move of char.customMoves) {
-      var response = await queryPromiseArr("INSERT INTO soa_moves SET ?", [move]);
-      char['moves'].push(response.insertId);
-      console.log("New soa move (id="+response.insertId+") created by "+user);
+    for (var move of char.customMoves) {
+      if (move.id) {
+        var response = await queryPromiseArr('UPDATE soa_moves SET ? WHERE id=?',[move,move.id]);
+        char.moves.push(move.id);
+        console.log("Custom soa move (id="+move.id+") updated by "+user);
+      }else {
+        delete move.id;
+        var response = await queryPromiseArr("INSERT INTO soa_moves SET ?", [move]);
+        char.moves.push(response.insertId);
+        console.log("New soa move (id="+response.insertId+") created by "+user);
+      }
     }
   }
 
@@ -304,7 +318,9 @@ app.get('/character/:sys/:charid', (req, res) => {
                 if (rows[0]['moves']) {
                   responseContext.sheetContext['moves'] = [];
                   JSON.parse(rows[0]["moves"]).forEach(move => {
-                    responseContext.sheetContext['moves'].push(result[1].find(entry => entry.id==move));
+                    var moveObj = result[1].find(entry => entry.id==move);
+                    moveObj['is_custom'] = (moveObj.source == "Custom");
+                    responseContext.sheetContext['moves'].push(moveObj);
                   });
                 }
               })
@@ -437,7 +453,7 @@ app.post('/save_character', express.json(), (req, res) => {
           character.users = JSON.stringify(character.users);
 
           // add character to database
-          var response = queryPromiseArr('INSERT INTO soa_characters SET ?',[character])
+          var response = queryPromiseArr('INSERT INTO soa_characters SET ?',[character]);
           response.then((result) => {
             console.log('New Character saved by '+req.session.username);
             res.status(200).send('/character/soa/'+result.insertId);

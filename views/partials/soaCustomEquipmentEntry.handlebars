@@ -1,8 +1,9 @@
-<div class="entry item-entry savable save-customEquips">
+<div class="entry item-entry savable save-customEquips" data-equipid="{{id}}">
     <div class="item-name-container">
         <label>
             <input name="item-name" placeholder="Name" value="{{name}}"/>
         </label>
+        <button class="collapse-equipment-button collapse-button">Expand</button>
         <select name="type" value="{{type}}">
             {{#if type}}
             {{else}}

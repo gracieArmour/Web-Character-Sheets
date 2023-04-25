@@ -79,14 +79,6 @@ textarea {
     background: rgba(0, 0, 0, 0.7);
 }
 
-#basic-properties-list {
-    display:flex;
-    flex-direction: column;
-    flex-wrap: wrap;
-    max-height: 150px;
-    padding: 0;
-}
-
 #name-input {
     font-weight: bold;
     font-size: 30px;
@@ -99,15 +91,42 @@ textarea {
     margin: 20px;
 }
 
+#basic-properties-list {
+    display:flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+    max-height: 150px;
+    padding: 0;
+}
+
 .character-property {
     display: grid;
-    grid-template-columns: 60px auto;
+    grid-template-columns: 60px auto 30px;
     gap: 5px;
     margin: 7px 7px;
 }
 
 .character-property label {
     text-align: right;
+}
+
+.delete-basic-property-button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    width: 15px;
+    height: 15px;
+    margin-left: 10px;
+    margin-top: 2px;
+    border-radius: 4px;
+    border: none;
+}
+
+.delete-basic-property-button:hover {
+    background-color: red;
+    color: white;
+    cursor: pointer;
 }
 
 
@@ -309,9 +328,18 @@ textarea {
     width: 150px;
 }
 
+.collapse-button {
+    border-radius: 5px;
+    height: fit-content;
+    width: fit-content;
+}
+
 .entry-info {
     display: flex;
     flex-direction: column;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.2s ease-out;
 }
 
 .entry-description {
@@ -365,7 +393,6 @@ textarea {
 
 .item-info .entry-description {
     width: 500px;
-    height: auto;
 }
 
 .item-uses input {
@@ -379,6 +406,7 @@ textarea {
     display:flex;
     flex-direction: row;
     justify-content: space-between;
+    align-items: center;
 }
 
 /* equipment selector */
@@ -420,6 +448,9 @@ textarea {
 /* Moves */
 .move-description {
     width: 500px;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.2s ease-out;
 }
 
 .move-name-container {
@@ -461,6 +492,7 @@ div.entry-description {
 .filter-container {
     display: flex;
     flex-direction: row;
+    align-items: center;
 }
 
 .move-filter {

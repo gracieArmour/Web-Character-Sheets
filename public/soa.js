@@ -2,19 +2,59 @@ console.log("soa js loaded");
 
 
 // DYNAMIC LISTENERS
-var savables;
+var savables, equipmentEntries, moveEntries;
 function refreshListeners() {
+	[...document.getElementsByClassName("delete-basic-property-button")].forEach(elem => {
+		elem.addEventListener("click", (event) => {
+			event.target.closest(".character-property").remove();
+		})
+	});
+
 	[...document.getElementsByClassName("delete-playbook-button")].forEach(elem => {
 		elem.addEventListener("click", (event) => {
 			event.target.closest(".playbook-entry").remove();
 		})
 	});
 
+	[...document.getElementsByClassName("collapse-equipment-button")].forEach(elem => {
+		elem.addEventListener("click", (event) => {
+			var content = event.target.closest(".entry").querySelector('.entry-info');
+			if (content.style.maxHeight) {
+				content.style.minHeight = null;
+				content.style.maxHeight = null;
+				elem.textContent = "Expand";
+			} else {
+				content.style.minHeight = "50px";
+				content.style.maxHeight = content.scrollHeight + "px";
+				elem.textContent = "Collapse";
+			}
+		})
+	});
+
+	equipmentEntries = [...document.getElementsByClassName("item-info")];
+
 	[...document.getElementsByClassName("delete-equipment-button")].forEach(elem => {
 		elem.addEventListener("click", (event) => {
 			event.target.closest(".item-entry").remove();
 		})
 	});
+
+	[...document.getElementsByClassName("collapse-move-button")].forEach(elem => {
+		elem.addEventListener("click", (event) => {
+			var content = event.target.closest(".entry").querySelector('.entry-info');
+			if (content.style.maxHeight) {
+				content.style.minHeight = null;
+				content.style.maxHeight = null;
+				elem.textContent = "Expand";
+			} else {
+				content.style.minHeight = "50px";
+				content.style.maxHeight = content.scrollHeight + "px";
+				elem.textContent = "Collapse";
+			}
+		})
+	});
+
+	moveEntries = [...document.getElementsByClassName("move-info")];
 
 	[...document.getElementsByClassName("delete-move-button")].forEach(elem => {
 		elem.addEventListener("click", (event) => {
@@ -47,10 +87,10 @@ function getCharData() {
 		}else if (elem.classList.contains("save-bProps")) {
 			o['basic_properties'].push({name:elem.name,value:elem.value});
 		}else if (elem.classList.contains("save-customProps")) {
-			if (elem.childNodes.item("name").value) {
+			if (elem.querySelector(".new-basic-property-name").value) {
 				o['basic_properties'].push({
-					name: elem.childNodes.item("name").value,
-					value: elem.childNodes.item("value").value
+					name: elem.querySelector(".new-basic-property-name").value,
+					value: elem.querySelector(".new-basic-property-value").value
 				});
 			}
 		}else if (elem.classList.contains("save-playbooks")) {
@@ -69,6 +109,7 @@ function getCharData() {
 		}else if (elem.classList.contains("save-customEquips")) {
 			if (elem.querySelector('.item-name-container label input').value) {
 				o['customEquips'].push({
+					id: elem.dataset.equipid,
 					name: elem.querySelector('.item-name-container label input').value,
 					description: elem.querySelector('.entry-description').value,
 					base_uses: Number(elem.querySelector('.item-uses input').value),
@@ -101,6 +142,7 @@ function getCharData() {
 				}
 
 				o['customMoves'].push({
+					id: elem.dataset.moveid,
 					name: elem.querySelector('.move-name-container label input').value,
 					description: elem.querySelector('.entry-description').value,
 					type: moveType,
@@ -130,7 +172,6 @@ function getCharData() {
 function makeAutosave() {
 	setCookie('charAutosave',getCharData());
 	setCookie('charAutosavePending',true);
-	console.log(document.cookie);
 }
 
 
@@ -176,6 +217,34 @@ document.getElementById("add-basic-property-button").addEventListener("click", f
 
 document.getElementById("character-img-edit-button").addEventListener("click", function() {
 	document.getElementById("character-img-input").classList.toggle("hidden");
+});
+
+document.getElementById("collapse-all-equipment").addEventListener("click", (event) => {
+	equipmentEntries.forEach(content => {
+		if (content.style.maxHeight) {
+			content.style.minHeight = null;
+			content.style.maxHeight = null;
+			event.target.textContent = "Expand All";
+		} else {
+			content.style.minHeight = "50px";
+			content.style.maxHeight = content.scrollHeight + "px";
+			event.target.textContent = "Collapse All";
+		}
+	})
+});
+
+document.getElementById("collapse-all-moves").addEventListener("click", (event) => {
+	moveEntries.forEach(content => {
+		if (content.style.maxHeight) {
+			content.style.minHeight = null;
+			content.style.maxHeight = null;
+			event.target.textContent = "Expand All";
+		} else {
+			content.style.minHeight = "50px";
+			content.style.maxHeight = content.scrollHeight + "px";
+			event.target.textContent = "Collapse All";
+		}
+	})
 });
 
 //playbook search
@@ -383,6 +452,7 @@ document.getElementById("share-modal-button").addEventListener("click", sendShar
 
 
 document.getElementById("saveButton").addEventListener('click', function() {
+	refreshListeners();
 	sendSave(getCharData())
 		.then((result) => {
 			if (result.includes("/character")) {
