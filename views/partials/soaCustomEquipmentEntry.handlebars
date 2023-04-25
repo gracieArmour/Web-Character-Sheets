@@ -3,7 +3,7 @@
         <label>
             <input name="item-name" placeholder="Name" value="{{name}}"/>
         </label>
-        <button class="collapse-equipment-button collapse-button">Expand</button>
+        <button class="collapse-equipment-button collapse-button" onclick="collapseContent(this)">Expand</button>
         <select name="type" value="{{type}}">
             {{#if type}}
             {{else}}
@@ -13,7 +13,7 @@
             <option value="Remedies">Remedies</option>
             <option value="Poison">Poison</option>
         </select>
-        <button class="delete-equipment-button">x</button>
+        <button class="delete-equipment-button" onclick="deleteHandler(this,'.item-entry')">x</button>
     </div>
     <div class="item-info entry-info">
         <textarea class="entry-description" name="item-description" placeholder="Description">{{description}}</textarea>

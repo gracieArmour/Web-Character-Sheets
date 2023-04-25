@@ -13,7 +13,7 @@
                     <li class="character-property">
                         <label>{{name}}</label>
                         <input id="{{name}}-input" class="savable save-bProps" name="{{name}}" value="{{value}}"/>
-                        <button class="delete-basic-property-button">x</button>
+                        <button class="delete-basic-property-button" onclick="deleteHandler(this,'.character-property')">x</button>
                     </li>
                 {{/each}}
             </ul>

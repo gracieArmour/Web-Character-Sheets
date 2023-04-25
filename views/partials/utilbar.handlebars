@@ -2,6 +2,9 @@
     <button id="saveButton">Save</button>
     <button id="loadButton"><a href="/load_characters/{{sysName}}">Load</a></button>
     <button id="share-modal-toggle">Share</button>
+    {{#if sheetContext.charID}}
+        <button id="deleteCharacterButton">Delete this Character</button>
+    {{/if}}
     {{#if sheetContext.last_updated}}
         <div id="last-saved">Last saved <em>{{sheetContext.last_updated}}</em></div>
     {{/if}}

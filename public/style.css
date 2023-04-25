@@ -125,6 +125,10 @@ header {
 }
 
 /* util bar */
+#deleteCharacterButton {
+    color: red;
+}
+
 #save-warning {
     margin-top: 5px;
     color: red;

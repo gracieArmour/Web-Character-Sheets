@@ -3,7 +3,7 @@
         <label>
             <input name="move-name" placeholder="Name" value="{{name}}"/>
         </label>
-        <button class="collapse-move-button collapse-button">Expand</button>
+        <button class="collapse-move-button collapse-button" onclick="collapseContent(this)">Expand</button>
         <select name="type" value="{{type}}" oninput="this.parentNode.parentNode.data-type = this.value">
             {{#if type}}
             {{else}}
@@ -18,7 +18,7 @@
             <option value="School">School</option>
             <option value="Invocation">Invocation</option>
         </select>
-        <button class="delete-move-button">x</button>
+        <button class="delete-move-button" onclick="deleteHandler(this,'.move-entry')">x</button>
     </div>
     <div class="move-info entry-info">
         <textarea class="entry-description" name="move-description" placeholder="Description">{{description}}</textarea>

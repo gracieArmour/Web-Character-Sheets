@@ -2,68 +2,34 @@ console.log("soa js loaded");
 
 
 // DYNAMIC LISTENERS
-var savables, equipmentEntries, moveEntries;
+function deleteHandler(elem,selector) {
+	elem.closest(selector).remove();
+}
+
+function collapseContent(elem) {
+	var content = elem.closest(".entry").querySelector('.entry-info');
+	if (content.style.maxHeight) {
+		content.style.minHeight = null;
+		content.style.maxHeight = null;
+		elem.textContent = "Expand";
+	} else {
+		content.style.minHeight = "50px";
+		content.style.maxHeight = content.scrollHeight + "px";
+		elem.textContent = "Collapse";
+	}
+}
+
+var savables, equipmentEntries, equipCollapseButtons, moveEntries, moveCollapseButtons;
 function refreshListeners() {
-	[...document.getElementsByClassName("delete-basic-property-button")].forEach(elem => {
-		elem.addEventListener("click", (event) => {
-			event.target.closest(".character-property").remove();
-		})
-	});
-
-	[...document.getElementsByClassName("delete-playbook-button")].forEach(elem => {
-		elem.addEventListener("click", (event) => {
-			event.target.closest(".playbook-entry").remove();
-		})
-	});
-
-	[...document.getElementsByClassName("collapse-equipment-button")].forEach(elem => {
-		elem.addEventListener("click", (event) => {
-			var content = event.target.closest(".entry").querySelector('.entry-info');
-			if (content.style.maxHeight) {
-				content.style.minHeight = null;
-				content.style.maxHeight = null;
-				elem.textContent = "Expand";
-			} else {
-				content.style.minHeight = "50px";
-				content.style.maxHeight = content.scrollHeight + "px";
-				elem.textContent = "Collapse";
-			}
-		})
-	});
-
+	equipCollapseButtons = [...document.getElementsByClassName("collapse-equipment-button")];
 	equipmentEntries = [...document.getElementsByClassName("item-info")];
 
-	[...document.getElementsByClassName("delete-equipment-button")].forEach(elem => {
-		elem.addEventListener("click", (event) => {
-			event.target.closest(".item-entry").remove();
-		})
-	});
-
-	[...document.getElementsByClassName("collapse-move-button")].forEach(elem => {
-		elem.addEventListener("click", (event) => {
-			var content = event.target.closest(".entry").querySelector('.entry-info');
-			if (content.style.maxHeight) {
-				content.style.minHeight = null;
-				content.style.maxHeight = null;
-				elem.textContent = "Expand";
-			} else {
-				content.style.minHeight = "50px";
-				content.style.maxHeight = content.scrollHeight + "px";
-				elem.textContent = "Collapse";
-			}
-		})
-	});
-
+	moveCollapseButtons = [...document.getElementsByClassName("collapse-move-button")];
 	moveEntries = [...document.getElementsByClassName("move-info")];
-
-	[...document.getElementsByClassName("delete-move-button")].forEach(elem => {
-		elem.addEventListener("click", (event) => {
-			event.target.closest(".move-entry").remove();
-		})
-	});
 
 	savables = [...document.getElementsByClassName("savable")];
 	savables.forEach(elem => {
+		elem.removeEventListener("change",makeAutosave);
 		elem.addEventListener("change", makeAutosave);
 	});
 }
@@ -208,6 +174,20 @@ var simplemde = new SimpleMDE({ element: document.getElementById("character-note
 simplemde.togglePreview();
 
 // STATIC LISTENERS
+document.getElementById("deleteCharacterButton").addEventListener("click", function() {
+    var confirmation = confirm("Deleting your character is not permanent, but only Gracie can recover it.\n\nAre you SURE you want to DELETE THIS CHARACTER?");
+    if (confirmation) {
+        refreshListeners();
+		var char = getCharData();
+		char.users = "[]";
+		sendSave(char)
+			.then((result) => {
+				setCookie("charAutosavePending",false);
+				window.location.href = "/load_characters/soa";
+			});
+    }
+});
+
 document.getElementById("add-basic-property-button").addEventListener("click", function () {
 	let newHTML = Handlebars.templates.basicPropertyEntry({});
 	var section = document.getElementById('basic-properties-list');
@@ -220,29 +200,37 @@ document.getElementById("character-img-edit-button").addEventListener("click", f
 });
 
 document.getElementById("collapse-all-equipment").addEventListener("click", (event) => {
+	refreshListeners();
+	var state = event.target.textContent == "Collapse All";
 	equipmentEntries.forEach(content => {
-		if (content.style.maxHeight) {
+		if (state) {
 			content.style.minHeight = null;
 			content.style.maxHeight = null;
 			event.target.textContent = "Expand All";
+			equipCollapseButtons.forEach((elem) => {elem.textContent = "Expand"});
 		} else {
 			content.style.minHeight = "50px";
 			content.style.maxHeight = content.scrollHeight + "px";
 			event.target.textContent = "Collapse All";
+			equipCollapseButtons.forEach((elem) => {elem.textContent = "Collapse"});
 		}
 	})
 });
 
 document.getElementById("collapse-all-moves").addEventListener("click", (event) => {
+	refreshListeners();
+	var state = event.target.textContent == "Collapse All";
 	moveEntries.forEach(content => {
-		if (content.style.maxHeight) {
+		if (state) {
 			content.style.minHeight = null;
 			content.style.maxHeight = null;
 			event.target.textContent = "Expand All";
+			moveCollapseButtons.forEach((elem) => {elem.textContent = "Expand"});
 		} else {
 			content.style.minHeight = "50px";
 			content.style.maxHeight = content.scrollHeight + "px";
 			event.target.textContent = "Collapse All";
+			moveCollapseButtons.forEach((elem) => {elem.textContent = "Collapse"});
 		}
 	})
 });
