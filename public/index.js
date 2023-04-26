@@ -15,11 +15,23 @@ function toggleNavDropdown(thisButton) {
 
 navToggles.forEach(button => {
     button.addEventListener('click', toggleNavDropdown.bind(this,button));
-})
+});
 
 document.getElementById("login-toggle").addEventListener("click", function () {
     document.getElementById("login-modal-container").classList.remove("hidden");
-})
+});
+
+var logoutButton = document.getElementById("logout-button");
+if (logoutButton) {
+    logoutButton.addEventListener("click", function() {
+        var confirmation = confirm("Are you sure you want to logout?");
+        if (confirmation) {
+            fetch('/logout', {method:'POST'})
+            location.reload();
+        }
+    });
+}
+
 
 
 // login system

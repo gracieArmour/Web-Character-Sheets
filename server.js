@@ -107,13 +107,17 @@ class contextBlock {
   systems = systemsList;
   sysName;
   charID;
+  loggedin;
+  username;
   // sheet context
   sheetContext = {
     basic_properties: [{name:"Age"}, {name:"Height"}, {name:"Weight"}],
     statsList: [],
   };
 
-  constructor(sys,id) {
+  constructor(loggedin,username,sys,id) {
+    this.loggedin = loggedin;
+    this.username = username;
     if (sys) {
       this.sysName = sys;
       this.layout = "system";
@@ -212,12 +216,12 @@ async function soaAddCustoms(char,user) {
 }
 
 // routing for home page using regex to catch possible home path variations
-app.get('/:homePath(home|index|index.html)?', (req, res) => {res.status(200).render('home', new contextBlock)});
+app.get('/:homePath(home|index|index.html)?', (req, res) => {res.status(200).render('home', new contextBlock(req.session.loggedin,req.session.username))});
 
 // routing for systems pages
 app.get('/systems/:sys', (req, res) => {
   var sys = req.params.sys;
-  var responseContext = new contextBlock(sys);
+  var responseContext = new contextBlock(req.session.loggedin,req.session.username,sys);
   if (systemsList.includes(sys)) {
     if (sys=="soa") {
       soaGetListData(responseContext)
@@ -235,7 +239,7 @@ app.get('/systems/:sys', (req, res) => {
 // routing for character list page
 app.get('/load_characters/:sys', (req, res) => {
   var sys = req.params.sys;
-  var responseContext = new contextBlock(sys);
+  var responseContext = new contextBlock(req.session.loggedin,req.session.username,sys);
 
   if (systemsList.includes(sys)) {
     queryPromise('SELECT * FROM '+sys+'_characters')
@@ -261,7 +265,7 @@ app.get('/load_characters/:sys', (req, res) => {
 app.get('/character/:sys/:charid', (req, res) => {
   var sys = req.params.sys;
   var id = req.params.charid;
-  var responseContext = new contextBlock(sys,id);
+  var responseContext = new contextBlock(req.session.loggedin,req.session.username,sys,id);
 
   if (systemsList.includes(sys)) {
     // grab character data
@@ -325,7 +329,7 @@ app.get('/character/:sys/:charid', (req, res) => {
                 }
               })
               .then((result) => {
-                res.status(200).render(path.join('systems',sys), responseContext.rawify())
+                res.status(200).render(path.join('systems',sys), responseContext.rawify());
               });
           }else {
             res.status(200).render(path.join('systems',sys), responseContext.rawify());
@@ -381,6 +385,14 @@ app.post('/auth/:loginType', express.json(), (req, res) => {
   }
 });
 
+// logout
+app.post('/logout', (req,res) => {
+  req.session.loggedin = false;
+  req.session.username = "";
+  req.session.userTZ = "";
+  res.status(200).send("Logged out");
+});
+
 // share character
 app.post('/share_character/:sys/:id', express.json(), (req,res) => {
   var sys = req.params.sys;
@@ -421,10 +433,11 @@ app.post('/share_character/:sys/:id', express.json(), (req,res) => {
 // catch save character request
 app.post('/save_character', express.json(), (req, res) => {
   var character = req.body;
+  character['image_url'] = character.image_url.slice(0,2083);
   if (character.id) {
     soaAddCustoms(character,req.session.username)
       .then((result) => {
-        var charid = character.id
+        var charid = character.id;
         delete character.id;
         var response = queryPromiseArr('UPDATE soa_characters SET ? WHERE id=?',[character,charid]);
         response.then((result) => {
@@ -494,7 +507,7 @@ app.post('/database/:fetchType', (req, res) => {
 })
 
 // routing for 404 error page
-app.use((req, res) => {res.status(404).render('404', new contextBlock)});
+app.use((req, res) => {res.status(404).render('404', new contextBlock(req.session.loggedin,req.session.username))});
 
 // server creation
 app.listen(port, function () {

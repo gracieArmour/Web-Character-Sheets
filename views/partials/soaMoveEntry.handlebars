@@ -1,12 +1,13 @@
 <div class="entry move-entry savable save-moves" data-moveid="{{id}}" data-type="{{type}}">
     <div class="item-name-container">
-        <label><a href="{{link}}">{{name}}</a></label>
+        <label><a class="move-name" href="{{link}}">{{name}}</a></label>
         <button class="collapse-move-button collapse-button" onclick="collapseContent(this)">Expand</button>
+        {{#if is_custom}}
+            <button class="edit-move-button" onclick="makeMoveEditable(this.parentNode.parentNode)">✎</button>
+        {{/if}}
         <button class="delete-move-button" onclick="deleteHandler(this,'.move-entry')">x</button>
     </div>
     <div class="move-info entry-info">
-        <div class="entry-description">
-            {{description}}
-        </div>
+        <div class="entry-description">{{description}}</div>
     </div>
 </div>

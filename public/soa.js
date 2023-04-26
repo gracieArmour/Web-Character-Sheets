@@ -6,6 +6,37 @@ function deleteHandler(elem,selector) {
 	elem.closest(selector).remove();
 }
 
+function makeEquipmentEditable(elem) {
+	var equipmentData = {
+		id: elem.dataset.equipid,
+		name: elem.querySelector(".item-name").textContent,
+		description: elem.querySelector(".entry-description").textContent,
+		uses: elem.querySelector(".item-uses input").value,
+		type: elem.dataset.type,
+		cost: elem.dataset.cost,
+		is_custom: 1,
+		link: elem.querySelector(".item-name").href
+	}
+	let newHTML = Handlebars.templates.soaCustomEquipmentEntry(equipmentData);
+	elem.insertAdjacentHTML('afterend', newHTML);
+	elem.remove();
+}
+
+function makeMoveEditable(elem) {
+	var moveData = {
+		id: elem.dataset.moveid,
+		name: elem.querySelector(".move-name").textContent,
+		description: elem.querySelector(".entry-description").textContent,
+		type: elem.dataset.type,
+		is_custom: 1,
+		link: elem.querySelector(".move-name").href
+	}
+	console.log(moveData);
+	let newHTML = Handlebars.templates.soaCustomMoveEntry(moveData);
+	elem.insertAdjacentHTML('afterend', newHTML);
+	elem.remove();
+}
+
 function collapseContent(elem) {
 	var content = elem.closest(".entry").querySelector('.entry-info');
 	if (content.style.maxHeight) {
@@ -174,29 +205,66 @@ var simplemde = new SimpleMDE({ element: document.getElementById("character-note
 simplemde.togglePreview();
 
 // STATIC LISTENERS
-document.getElementById("deleteCharacterButton").addEventListener("click", function() {
-    var confirmation = confirm("Deleting your character is not permanent, but only Gracie can recover it.\n\nAre you SURE you want to DELETE THIS CHARACTER?");
-    if (confirmation) {
-        refreshListeners();
-		var char = getCharData();
-		char.users = "[]";
-		sendSave(char)
-			.then((result) => {
+document.getElementById("saveButton").addEventListener('click', function() {
+	refreshListeners();
+	sendSave(getCharData())
+		.then((result) => {
+			if (result.includes("/character")) {
 				setCookie("charAutosavePending",false);
-				window.location.href = "/load_characters/soa";
-			});
-    }
+				window.location.href = result;
+			}else if (new Date(result)=="Invalid Date") {
+				document.getElementById("save-warning").textContent = result;
+			}else {
+				document.querySelector("#last-saved em").textContent = result;
+				setCookie('charAutosavePending',false);
+			}
+		});
 });
 
+// share logic
+[...document.getElementsByClassName("delete-user-button")].forEach(elem => {
+	elem.addEventListener("click", (event) => {
+		event.target.closest(".shared-entry").remove();
+	})
+});
+
+document.getElementById("share-modal-button").addEventListener("click", sendShare.bind(null,'soa'));
+
+var deleteCharacterButton = document.getElementById("deleteCharacterButton");
+if (deleteCharacterButton) {
+	deleteCharacterButton.addEventListener("click", function() {
+		var confirmation = confirm("Deleting your character is not permanent, but only Gracie can recover it.\n\nAre you SURE you want to DELETE THIS CHARACTER?");
+		if (confirmation) {
+			refreshListeners();
+			var char = getCharData();
+			char.users = "[]";
+			sendSave(char)
+				.then((result) => {
+					setCookie("charAutosavePending",false);
+					window.location.href = "/load_characters/soa";
+				});
+		}
+	});
+}
+
 document.getElementById("add-basic-property-button").addEventListener("click", function () {
-	let newHTML = Handlebars.templates.basicPropertyEntry({});
-	var section = document.getElementById('basic-properties-list');
-	section.insertAdjacentHTML('beforeend', newHTML);
-	makeAutosave();
+	var currentCount = [...document.getElementsByClassName("character-property")].length;
+	if (currentCount < 16) {
+		let newHTML = Handlebars.templates.basicPropertyEntry({});
+		var section = document.getElementById('basic-properties-list');
+		section.insertAdjacentHTML('beforeend', newHTML);
+		makeAutosave();
+	}
 });
 
 document.getElementById("character-img-edit-button").addEventListener("click", function() {
 	document.getElementById("character-img-input").classList.toggle("hidden");
+});
+
+[...document.getElementsByClassName("dropdown-list")].forEach((elem) => {
+	elem.addEventListener("mousedown", (event) => {
+		event.preventDefault();
+	});
 });
 
 document.getElementById("collapse-all-equipment").addEventListener("click", (event) => {
@@ -238,15 +306,26 @@ document.getElementById("collapse-all-moves").addEventListener("click", (event) 
 //playbook search
 var playbookListDropdown = document.getElementById("playbook-dropdown");
 
+function updatePlaybookFilter() {
+	var playbooks = ["Any"];
+	[...document.querySelectorAll("#move-playbook-selector option")].forEach((elem) => {elem.remove()});
+
+	[...document.getElementsByClassName("playbook-entry")].forEach((elem) => {playbooks.push(elem.dataset.playbookname)});
+
+	playbooks.forEach((playbook) => {
+		let newHTML = Handlebars.templates.soaPlaybookFilterEntry(playbook);
+		var section = document.getElementById('move-playbook-selector');
+		section.insertAdjacentHTML('beforeend', newHTML);
+	})
+}
+
 document.getElementById("playbook-search").addEventListener("focusin", function () {
 	playbookListDropdown.classList.remove("hidden");
 	playbookFilter();
 });
 
 document.getElementById("playbook-search").addEventListener("focusout", function () {
-	setTimeout(function() {
-		playbookListDropdown.classList.add("hidden");
-	},100);
+	playbookListDropdown.classList.add("hidden");
 });
 
 [...document.getElementsByClassName("playbook-list-entry")].forEach(elem => {
@@ -254,6 +333,7 @@ document.getElementById("playbook-search").addEventListener("focusout", function
 		let newHTML = Handlebars.templates.soaPlaybookEntry(elem.textContent);
 		var section = document.getElementById('playbook-list');
 		section.insertAdjacentHTML('beforeend', newHTML);
+		playbookFilter();
 		makeAutosave();
 	})
 });
@@ -267,9 +347,7 @@ document.getElementById("equipment-search").addEventListener("focusin", function
 });
 
 document.getElementById("equipment-search").addEventListener("focusout", function () {
-	setTimeout(function() {
-		equipmentListDropdown.classList.add("hidden");
-	}, 100);
+	equipmentListDropdown.classList.add("hidden");
 });
 
 [...document.getElementsByClassName("equipment-list-entry")].forEach(elem => {
@@ -277,6 +355,7 @@ document.getElementById("equipment-search").addEventListener("focusout", functio
 		let newHTML = Handlebars.templates.soaEquipmentEntry(allEquipmentData[elem.dataset.equipmentid]);
 		var section = document.getElementById('equipment-list');
 		section.insertAdjacentHTML('beforeend', newHTML);
+		equipmentFilter();
 		makeAutosave();
 	})
 });
@@ -297,9 +376,7 @@ document.getElementById("move-search").addEventListener("focusin", function () {
 });
 
 document.getElementById("move-search").addEventListener("focusout", function () {
-	setTimeout(function() {
-		moveListDropdown.classList.add("hidden");
-	}, 100);
+	moveListDropdown.classList.add("hidden");
 });
 
 [...document.getElementsByClassName("move-list-entry")].forEach(elem => {
@@ -307,6 +384,7 @@ document.getElementById("move-search").addEventListener("focusout", function () 
 		let newHTML = Handlebars.templates.soaMoveEntry(playbookMoveData[elem.dataset.moveid]);
 		var section = document.getElementById('move-list');
 		section.insertAdjacentHTML('beforeend', newHTML);
+		moveFilter();
 		makeAutosave();
 	})
 });
@@ -426,30 +504,3 @@ function moveFilter() {
 		}
 	}
 }
-
-
-// share logic
-[...document.getElementsByClassName("delete-user-button")].forEach(elem => {
-	elem.addEventListener("click", (event) => {
-		event.target.closest(".shared-entry").remove();
-	})
-});
-
-
-document.getElementById("share-modal-button").addEventListener("click", sendShare.bind(null,'soa'));
-
-
-document.getElementById("saveButton").addEventListener('click', function() {
-	refreshListeners();
-	sendSave(getCharData())
-		.then((result) => {
-			if (result.includes("/character")) {
-				window.location.href = result;
-			}else if (new Date(result)=="Invalid Date") {
-				document.getElementById("save-warning").textContent = result;
-			}else {
-				document.querySelector("#last-saved em").textContent = result;
-				setCookie('charAutosavePending',false);
-			}
-		});
-});

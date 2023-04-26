@@ -1,7 +1,10 @@
-<div class="entry item-entry savable save-equipment" data-equipid="{{id}}">
+<div class="entry item-entry savable save-equipment" data-equipid="{{id}}" data-type="{{type}}" data-cost="{{cost}}">
     <div class="item-name-container">
-        <label><a href="{{link}}">{{name}}</a></label>
+        <label><a class="item-name" href="{{link}}">{{name}}</a></label>
         <button class="collapse-equipment-button collapse-button" onclick="collapseContent(this)">Expand</button>
+        {{#if is_custom}}
+            <button class="edit-equipment-button" onclick="makeEquipmentEditable(this.parentNode.parentNode)">✎</button>
+        {{/if}}
         <button class="delete-equipment-button" onclick="deleteHandler(this,'.item-entry')">x</button>
     </div>
     <div class="item-info entry-info">

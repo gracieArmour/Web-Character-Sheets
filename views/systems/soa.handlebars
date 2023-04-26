@@ -82,11 +82,7 @@
                 </div>
                 <div id="equipment-list" class="list">
                     {{#each sheetContext.equipment}}
-                        {{#if is_custom}}
-                            {{> soaCustomEquipmentEntry}}
-                        {{else}}
-                            {{> soaEquipmentEntry}}
-                        {{/if}}
+                        {{> soaEquipmentEntry}}
                     {{/each}}
                 </div>
             </div>
@@ -119,10 +115,10 @@
                     
                     <div id="move-playbook-selector-container" class="move-filter">
                         <label>Playbook</label>
-                        <select id="move-playbook-selector">
+                        <select id="move-playbook-selector" onclick="updatePlaybookFilter()">
                             <option value="Any">Any</option>
                             {{#each sheetContext.playbooks}}
-                                <option value="{{this}}">{{this}}</option>
+                                {{> soaPlaybookFilterEntry}}
                             {{/each}}
                         </select>
                     </div>
@@ -134,11 +130,7 @@
                 <button class="add-button" id="add-move-button" type="button">New Move</button>
                 <div id="move-list" class="list">
                     {{#each sheetContext.moves}}
-                        {{#if is_custom}}
-                            {{> soaCustomMoveEntry}}
-                        {{else}}
-                            {{> soaMoveEntry}}
-                        {{/if}}
+                        {{> soaMoveEntry}}
                     {{/each}}
                 </div>
             </div>
@@ -159,6 +151,7 @@
 <link rel="stylesheet" href="/soa.css"/>
 <script src="/soa.js" defer></script>
 <script src="/soaPlaybookEntry.js" defer></script>
+<script src="/soaPlaybookFilterEntry.js" defer></script>
 <script src="/soaEquipmentEntry.js" defer></script>
 <script src="/soaCustomEquipmentEntry.js" defer></script>
 <script src="/soaMoveEntry.js" defer></script>
