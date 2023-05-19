@@ -111,7 +111,8 @@ function getCharData() {
 
 	savables.forEach(elem => {
 		if (elem.classList.contains("save-img")) {
-			o[elem.name] = elem.getAttribute("src");
+			console.log(elem.src.includes("localhost") ? "" : elem.src);
+			o[elem.name] = elem.src.includes("localhost") ? "" : elem.src;
 		}else if (elem.classList.contains("save-bProps")) {
 			o['basic_properties'].push({name:elem.name,value:elem.value});
 		}else if (elem.classList.contains("save-customProps")) {

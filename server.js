@@ -240,10 +240,10 @@ async function soaAddCustoms(char,user) {
 
   if (char.customMoves) {
     for (var move of char.customMoves) {
-      var pos = item.position;
-      var exp = item.is_expanded;
-      delete item.position;
-      delete item.is_expanded;
+      var pos = move.position;
+      var exp = move.is_expanded;
+      delete move.position;
+      delete move.is_expanded;
       if (move.id) {
         var response = await queryPromiseArr('UPDATE soa_moves SET ? WHERE id=?',[move,move.id]);
         char.moves.splice(pos,0,{id:move.id, is_expanded: exp});
@@ -268,7 +268,7 @@ async function soaAddCustoms(char,user) {
 app.get('/:homePath(home|index|index.html)?', (req, res) => {res.status(200).render('home', new contextBlock(req))});
 
 // routing for systems pages
-app.get('/systems/:sys', (req, res) => {
+app.get('/systems/:sys', (req, res, next) => {
   var sys = req.params.sys;
   var responseContext = new contextBlock(req,sys);
 
@@ -281,7 +281,8 @@ app.get('/systems/:sys', (req, res) => {
       soaGetListData(responseContext)
         .then((result) => {
           res.status(200).render(path.join('systems',sys), responseContext.rawify())
-        });
+        })
+        .catch(next);
       break;
     default:
       res.status(404).render('404', responseContext);
@@ -289,7 +290,7 @@ app.get('/systems/:sys', (req, res) => {
 });
 
 // routing for character list page
-app.get('/load_characters/:sys', (req, res) => {
+app.get('/load_characters/:sys', (req, res, next) => {
   var sys = req.params.sys;
   var responseContext = new contextBlock(req,sys);
 
@@ -302,7 +303,8 @@ app.get('/load_characters/:sys', (req, res) => {
           if (JSON.parse(row.users).includes(req.session.username)) {
             responseContext.sheetContext['charactersList'].push({id: row.id,name: row.name,image: row.image_url});
           }
-        });
+      })
+      .catch(next);
 
         // send response
         res.status(200).render('characterList', responseContext.rawify());
@@ -371,12 +373,13 @@ async function soaLoadChar(context,char,userTZ,listData) {
   }
 }
 
-app.get('/character/:sys/:charid', (req, res) => {
+app.get('/character/:sys/:charid', (req, res, next) => {
+
   var sys = req.params.sys;
   var id = req.params.charid;
   var responseContext = new contextBlock(req,sys,id);
 
-  if (!systemsList.includes(sys)) {
+  if (!systemsList.includes(sys) || isNaN(id)) {
     res.status(404).render('404', responseContext);
     return;
   }
@@ -396,40 +399,34 @@ app.get('/character/:sys/:charid', (req, res) => {
             .then(result => soaLoadChar(responseContext,rows[0],req.session.userTZ,result))
             .then((result) => {
               res.status(200).render(path.join('systems',sys), responseContext.rawify());
-            });
+            })
+            .catch(next);
           break;
         default:
           res.status(200).render(path.join('systems',sys), responseContext.rawify());
       }
-    });
+    })
+    .catch(next);
 });
 
 
 // POSTS
 
 // CSRF Checker Middleware
-function checkCSRF(req) {
+function checkCSRF(req, res, next) {
   var bodyToken = req.body.csrf;
   delete req.body.csrf;
   if (!bodyToken) {
-    console.log("CSRF Token not included");
-    return false;
+    return next(new Error("CSRF Token not included"));
   }
 
   if (bodyToken !== req.session.csrf) {
-    console.log("CSRF tokens do not match");
-    return false;
+    return next(new Error("CSRF tokens do not match"));
   }
-
-  return true;
 }
 
 // authenticate login
-app.post('/auth/:loginType', (req, res) => {
-  if (!checkCSRF(req)) {
-    res.send(new Error("CSRF Error"));
-    return;
-  }
+app.post('/auth/:loginType', checkCSRF, (req, res, next) => {
   var type = req.params.loginType;
   var username = req.body.username;
   var password = req.body.password;
@@ -468,28 +465,22 @@ app.post('/auth/:loginType', (req, res) => {
             req.session.userTZ = userTZ;
             req.session.loggedin = true;
             res.send('Account created');
-          });
+          })
+          .catch(next);
       }
-    });
+    })
+    .catch(next);
 });
 
 // logout
-app.post('/logout', (req,res) => {
-  if (!checkCSRF(req)) {
-    res.send(new Error("CSRF Error"));
-    return;
-  }
+app.post('/logout', checkCSRF, (req, res, next) => {
   res.status(200).clearCookie('session');
   req.session = null;
   res.status(200).send("Logged out");
 });
 
 // share character
-app.post('/share_character/:sys/:id', (req,res) => {
-  if (!checkCSRF(req)) {
-    res.send(new Error("CSRF Error"));
-    return;
-  }
+app.post('/share_character/:sys/:id', checkCSRF, (req, res, next) => {
   var sys = req.params.sys;
   var id = req.params.id;
   var newUser = req.body.newUser;
@@ -508,11 +499,13 @@ app.post('/share_character/:sys/:id', (req,res) => {
           queryPromise('UPDATE '+sys+'_characters SET users=\''+JSON.stringify(existingUsers)+'\' WHERE id='+id)
             .then((result) => {
               res.send('Shared successfully');
-            });
+            })
+            .catch(next);
         }else {
           res.send('Account does not exist, username may be misspelled');
         }
-      });
+      })
+      .catch(next);
   }else {
     if (!(existingUsers.includes(req.session.username))) {
       existingUsers.push(req.session.username);
@@ -520,17 +513,14 @@ app.post('/share_character/:sys/:id', (req,res) => {
     queryPromise('UPDATE '+sys+'_characters SET users=\''+JSON.stringify(existingUsers)+'\' WHERE id='+id)
       .then((result) => {
         res.send('Shared successfully');
-      });
+      })
+      .catch(next);
   }
 });
 
 
 // catch save character request
-app.post('/save_character', (req, res) => {
-  if (!checkCSRF(req)) {
-    res.send(new Error("CSRF Error"));
-    return;
-  }
+app.post('/save_character', checkCSRF, (req, res, next) => {
   var character = req.body;
   character['image_url'] = character.image_url.slice(0,2083);
   if (character.id) {
@@ -553,8 +543,10 @@ app.post('/save_character', (req, res) => {
                 hour: 'numeric',
                 minute: 'numeric'
               }));
-            });
-        });
+            })
+            .catch(next);
+        })
+        .catch(next);
       });
   }else {
     soaAddCustoms(character,req.session.username)
@@ -574,16 +566,13 @@ app.post('/save_character', (req, res) => {
           console.log('New Character saved by '+req.session.username);
           res.status(200).send('/character/soa/'+result.insertId);
         });
-      });
+      })
+      .catch(next);
   }
 });
 
 // send raw data to client
-app.post('/database/:fetchType', (req, res) => {
-  if (!checkCSRF(req)) {
-    res.send(new Error("CSRF Error"));
-    return;
-  }
+app.post('/database/:fetchType', checkCSRF, (req, res) => {
   var fetchType = req.params.fetchType;
   
   switch (fetchType) {
@@ -596,7 +585,8 @@ app.post('/database/:fetchType', (req, res) => {
             output[row.id] = row;
           });
           res.status(200).send(output);
-        });
+        })
+        .catch(next);
       break;
     case "AllPlaybooks":
       queryPromise('SELECT DISTINCT source FROM soa_moves WHERE source<>"Custom"')
@@ -606,7 +596,8 @@ app.post('/database/:fetchType', (req, res) => {
             output.push(row.source);
           });
           res.status(200).send(output);
-        });
+        })
+        .catch(next);
   }
 })
 
