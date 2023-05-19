@@ -18,8 +18,8 @@ const https = require('https');
 const cfUtils = require('./public/crossFileUtils.js');
 
 // collect environmentally stored variables
-var port = process.env.PORT || 3000;
 var envName = process.env.ENVNAME;
+var port = process.env.PORT;
 
 // set up express for use with handlebars
 const app = express();
