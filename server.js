@@ -19,7 +19,7 @@ const cfUtils = require('./public/crossFileUtils.js');
 
 // collect environmentally stored variables
 var port = process.env.PORT || 3000;
-var envName = process.env.ENVNAME || "prod"
+var envName = process.env.ENVNAME;
 
 // set up express for use with handlebars
 const app = express();
@@ -59,7 +59,7 @@ function addressMatch(address,allowlist) {
 // Cloudflare Only Whitelisting
 app.use((req, res, next) => {
     if (envName=="dev") {
-      return;
+      return next();
     }
 
     var whitelistArr = fs.readFileSync('whitelist.txt','utf8').split(',');
@@ -70,7 +70,7 @@ app.use((req, res, next) => {
         console.log("Access denied from remote IP " + ip);
         return next(new Error("Your IP address is not allowed to access this resource."));
     }
-    next();
+    return next();
 });
 
 app.use(express.json());
@@ -618,7 +618,7 @@ switch (envName) {
   case "dev":
     // dev server creation
     http.createServer(app).listen(port, function () {
-      console.log("== Server is listening on port", port);
+      console.log("== Dev Server is listening on port", port);
     });
     break;
   case "prod":
@@ -629,7 +629,7 @@ switch (envName) {
     };
 
     https.createServer(serverOptions,app).listen(port, function () {
-      console.log("== Server is listening on port", port);
+      console.log("== Prod Server is listening on port", port);
     });
     break;
 }
