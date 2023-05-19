@@ -11,9 +11,12 @@
                 {{/each}}
             </ul>
         </div>
-        <div class="nav-button">
-            <a id="login-toggle">Login</a>
-        </div>
+        {{#if loggedin}}
+        {{else}}
+            <div class="nav-button">
+                <a id="login-toggle">Login</a>
+            </div>
+        {{/if}}
     </div>
     <div id="right-navs" class="navs-container">
         {{#if loggedin}}

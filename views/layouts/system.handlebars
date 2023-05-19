@@ -23,7 +23,12 @@
 
             {{{body}}}
 
-            {{> loginModal}}
+            {{#if loggedin}}
+            {{else}}
+                {{> loginModal}}
+            {{/if}}
+
+            <input id="csrfToken" class="hidden" value="{{csrfToken}}"/>
         </main>
     </body>
 </html>

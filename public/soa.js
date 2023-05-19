@@ -1,6 +1,10 @@
 console.log("soa js loaded");
 
 
+// notes section
+var simplemde = new SimpleMDE({ element: document.getElementById("character-notes") });
+simplemde.togglePreview();
+
 // DYNAMIC LISTENERS
 function deleteHandler(elem,selector) {
 	elem.closest(selector).remove();
@@ -15,11 +19,13 @@ function makeEquipmentEditable(elem) {
 		type: elem.dataset.type,
 		cost: elem.dataset.cost,
 		is_custom: 1,
-		link: elem.querySelector(".item-name").href
+		link: elem.querySelector(".item-name").href,
+		is_expanded: elem.querySelector(".collapse-button").textContent == "Collapse"
 	}
 	let newHTML = Handlebars.templates.soaCustomEquipmentEntry(equipmentData);
 	elem.insertAdjacentHTML('afterend', newHTML);
 	elem.remove();
+	refreshListeners();
 }
 
 function makeMoveEditable(elem) {
@@ -29,12 +35,13 @@ function makeMoveEditable(elem) {
 		description: elem.querySelector(".entry-description").textContent,
 		type: elem.dataset.type,
 		is_custom: 1,
-		link: elem.querySelector(".move-name").href
+		link: elem.querySelector(".move-name").href,
+		is_expanded: elem.querySelector(".collapse-button").textContent == "Collapse"
 	}
-	console.log(moveData);
 	let newHTML = Handlebars.templates.soaCustomMoveEntry(moveData);
 	elem.insertAdjacentHTML('afterend', newHTML);
 	elem.remove();
+	refreshListeners();
 }
 
 function collapseContent(elem) {
@@ -44,9 +51,25 @@ function collapseContent(elem) {
 		content.style.maxHeight = null;
 		elem.textContent = "Expand";
 	} else {
-		content.style.minHeight = "50px";
+		content.style.minHeight = "100px";
 		content.style.maxHeight = content.scrollHeight + "px";
 		elem.textContent = "Collapse";
+	}
+}
+
+function shiftUp(elem) {
+	var previous = elem.previousElementSibling;
+	if (previous) {
+		previous.insertAdjacentElement('beforebegin',elem);
+		makeAutosave();
+	}
+}
+
+function shiftDown(elem) {
+	var next = elem.nextElementSibling;
+	if (next) {
+		next.insertAdjacentElement('afterend',elem);
+		makeAutosave();
 	}
 }
 
@@ -60,6 +83,12 @@ function refreshListeners() {
 
 	savables = [...document.getElementsByClassName("savable")];
 	savables.forEach(elem => {
+		elem.removeEventListener("change",makeAutosave);
+		elem.addEventListener("change", makeAutosave);
+	});
+
+	notesFields = [...document.getElementsByClassName("CodeMirror-wrap")];
+	notesFields.forEach(elem => {
 		elem.removeEventListener("change",makeAutosave);
 		elem.addEventListener("change", makeAutosave);
 	});
@@ -77,10 +106,12 @@ function getCharData() {
 		moves: [],
 		customMoves: []
 	};
+	var moveList = [...document.getElementsByClassName("move-entry")];
+	var equipList = [...document.getElementsByClassName("item-entry")];
 
 	savables.forEach(elem => {
 		if (elem.classList.contains("save-img")) {
-			o[elem.name] = elem.src;
+			o[elem.name] = elem.getAttribute("src");
 		}else if (elem.classList.contains("save-bProps")) {
 			o['basic_properties'].push({name:elem.name,value:elem.value});
 		}else if (elem.classList.contains("save-customProps")) {
@@ -101,7 +132,8 @@ function getCharData() {
 		}else if (elem.classList.contains("save-equipment")) {
 			o['equipment'].push({
 				id: Number(elem.dataset.equipid),
-				uses: Number(elem.querySelector('.item-uses input').value)
+				uses: Number(elem.querySelector('.item-uses input').value),
+				is_expanded: elem.querySelector(".collapse-button").textContent == "Collapse"
 			});
 		}else if (elem.classList.contains("save-customEquips")) {
 			if (elem.querySelector('.item-name-container label input').value) {
@@ -112,11 +144,16 @@ function getCharData() {
 					base_uses: Number(elem.querySelector('.item-uses input').value),
 					cost: Number(elem.querySelector('.item-cost-container input').value),
 					type: elem.querySelector('.item-name-container select').value,
-					is_custom: 1
+					is_custom: 1,
+					position: equipList.indexOf(elem),
+					is_expanded: elem.querySelector(".collapse-button").textContent == "Collapse"
 				});
 			}
 		}else if (elem.classList.contains("save-moves")) {
-			o['moves'].push(Number(elem.dataset.moveid));
+			o['moves'].push({
+				id: Number(elem.dataset.moveid),
+				is_expanded: elem.querySelector(".collapse-button").textContent == "Collapse"
+			});
 		}else if (elem.classList.contains("save-customMoves")) {
 			if (elem.querySelector('.move-name-container label input').value) {
 				var moveType, levelReq;
@@ -145,7 +182,9 @@ function getCharData() {
 					type: moveType,
 					prereq_level: levelReq,
 					prereq_move: 0,
-					source: "Custom"
+					source: "Custom",
+					position: moveList.indexOf(elem),
+					is_expanded: elem.querySelector(".collapse-button").textContent == "Collapse"
 				});
 			}
 		}else {
@@ -190,19 +229,27 @@ window.onload = function () {
 var allEquipmentData, playbookMoveData, allPlaybooks;
 async function getData() {
 	// equipment
-	var equipmentResponse = await fetch('/database/AllEquipment', {method: 'POST'});
+	var equipmentResponse = await fetch('/database/AllEquipment', {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json'
+		},
+		body: JSON.stringify({csrf:document.getElementById("csrfToken").value})
+	});
 	allEquipmentData = await equipmentResponse.json();
 
 	// moves
-	var moveResponse = await fetch('/database/AllMoves', {method: 'POST'});
+	var moveResponse = await fetch('/database/AllMoves', {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json'
+		},
+		body: JSON.stringify({csrf:document.getElementById("csrfToken").value})
+	});
 	playbookMoveData = await moveResponse.json();
 }
 getData();
 
-
-// notes section
-var simplemde = new SimpleMDE({ element: document.getElementById("character-notes") });
-simplemde.togglePreview();
 
 // STATIC LISTENERS
 document.getElementById("saveButton").addEventListener('click', function() {
@@ -222,13 +269,16 @@ document.getElementById("saveButton").addEventListener('click', function() {
 });
 
 // share logic
-[...document.getElementsByClassName("delete-user-button")].forEach(elem => {
-	elem.addEventListener("click", (event) => {
-		event.target.closest(".shared-entry").remove();
-	})
-});
+var sendShareButton = document.getElementById("share-modal-button");
+if (sendShareButton) {
+	sendShareButton.addEventListener("click", sendShare.bind(null,'soa'));
 
-document.getElementById("share-modal-button").addEventListener("click", sendShare.bind(null,'soa'));
+	[...document.getElementsByClassName("delete-user-button")].forEach(elem => {
+		elem.addEventListener("click", (event) => {
+			event.target.closest(".shared-entry").remove();
+		})
+	});
+}
 
 var deleteCharacterButton = document.getElementById("deleteCharacterButton");
 if (deleteCharacterButton) {
@@ -277,7 +327,7 @@ document.getElementById("collapse-all-equipment").addEventListener("click", (eve
 			event.target.textContent = "Expand All";
 			equipCollapseButtons.forEach((elem) => {elem.textContent = "Expand"});
 		} else {
-			content.style.minHeight = "50px";
+			content.style.minHeight = "100px";
 			content.style.maxHeight = content.scrollHeight + "px";
 			event.target.textContent = "Collapse All";
 			equipCollapseButtons.forEach((elem) => {elem.textContent = "Collapse"});
@@ -295,7 +345,7 @@ document.getElementById("collapse-all-moves").addEventListener("click", (event) 
 			event.target.textContent = "Expand All";
 			moveCollapseButtons.forEach((elem) => {elem.textContent = "Expand"});
 		} else {
-			content.style.minHeight = "50px";
+			content.style.minHeight = "100px";
 			content.style.maxHeight = content.scrollHeight + "px";
 			event.target.textContent = "Collapse All";
 			moveCollapseButtons.forEach((elem) => {elem.textContent = "Collapse"});

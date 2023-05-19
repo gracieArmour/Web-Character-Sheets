@@ -1,13 +1,17 @@
 <div class="entry item-entry savable save-equipment" data-equipid="{{id}}" data-type="{{type}}" data-cost="{{cost}}">
     <div class="item-name-container">
         <label><a class="item-name" href="{{link}}">{{name}}</a></label>
-        <button class="collapse-equipment-button collapse-button" onclick="collapseContent(this)">Expand</button>
-        {{#if is_custom}}
-            <button class="edit-equipment-button" onclick="makeEquipmentEditable(this.parentNode.parentNode)">✎</button>
-        {{/if}}
-        <button class="delete-equipment-button" onclick="deleteHandler(this,'.item-entry')">x</button>
+        <div class="item-util-container entry-util-container">
+            {{#if is_custom}}
+                <button class="edit-equipment-button edit-entry-button" onclick="makeEquipmentEditable(this.closest('.item-entry'))">✎</button>
+            {{/if}}
+            <button class="collapse-equipment-button collapse-button" onclick="collapseContent(this)">{{#if is_expanded}}Collapse{{else}}Expand{{/if}}</button>
+            <button class="move-up-button move-entry-button" onclick="shiftUp(this.closest('.item-entry'))">^</button>
+            <button class="move-down-button move-entry-button" onclick="shiftDown(this.closest('.item-entry'))">⌄</button>
+            <button class="delete-equipment-button" onclick="deleteHandler(this,'.item-entry')">x</button>
+        </div>
     </div>
-    <div class="item-info entry-info">
+    <div class="item-info entry-info" {{#if is_expanded}}style="min-height: 100px; max-height: fit-content;"{{/if}}>
         <div class="entry-description">{{description}}</div>
         <div class="item-uses">
             <label>Uses</label>

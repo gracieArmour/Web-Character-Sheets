@@ -138,6 +138,7 @@
     </div>
     <div id="notes-section">
         <label><h2>Notes</h2></label>
+        <div id="notes-tutorial">The notes start in Preview mode, press the little eye button to switch to Edit mode.</div>
         <textarea id="character-notes">{{sheetContext.notes}}</textarea>
     </div>
     <div id="debug-area" class="debug hidden">
@@ -145,7 +146,9 @@
     </div>
 </div>
 
-{{> shareModal sheetContext}}
+{{#if sheetContext.charID}}
+    {{> shareModal sheetContext}}
+{{/if}}
 
 <!--additional file dependencies-->
 <link rel="stylesheet" href="/soa.css"/>

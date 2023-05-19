@@ -5,46 +5,83 @@
 // dependencies
 require('dotenv').config();
 const express = require('express');
-const session = require('express-session');
+const helmet = require('helmet');
+const cookieParser = require('cookie-parser');
+const cookieSession = require('cookie-session');
+const { randomBytes } = require('crypto');
 const exhandle = require('express-handlebars');
 const mysql = require('mysql');
 const fs = require('fs');
 const path = require('path');
+const http = require('http');
+const https = require('https');
 const cfUtils = require('./public/crossFileUtils.js');
 
 // collect environmentally stored variables
 var port = process.env.PORT || 3000;
+var envName = process.env.ENVNAME || "prod"
 
 // set up express for use with handlebars
 const app = express();
 
+// helmet security measures
+//if images break, fully turn off COEP
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+      "font-src": ["'self'","cdn.rawgit.com","maxcdn.bootstrapcdn.com"],
+      "script-src": ["'self'","cdn.jsdelivr.net"],
+      "script-src-attr": "'unsafe-inline'",
+      "connect-src": ["'self'","cdn.jsdelivr.net"],
+      "img-src": ["'self'","https:"]
+    }
+  },
+  crossOriginEmbedderPolicy: {
+    policy: "credentialless"
+  },
+  hsts: false
+}));
+
 // server config
+function addressMatch(address,allowlist) {
+  match = false;
+
+  allowlist.map(str => new RegExp("^::ffff:"+str)).forEach(range => {
+    if (range.test(address)) {
+      match = true;
+    }
+  });
+
+  return match;
+}
+
+// Cloudflare Only Whitelisting
 app.use((req, res, next) => {
-    fs.readFile(__dirname + '/config.json', function(err, file) {
-        if(err) return next(new Error("Internal error : " + err.message));
+    if (envName=="dev") {
+      return;
+    }
 
-        const config = JSON.parse(file.toString('utf8'));
-		
-		//WHITELIST
-        if(!config.restrictAccess) {
-          return next();
-        }else {
-          var ip = req.socket.remoteAddress;
-          console.log(ip + " requested " + req.url);
+    var whitelistArr = fs.readFileSync('whitelist.txt','utf8').split(',');
+    var ip = req.socket.remoteAddress;
+    console.log(ip + " requested " + req.url);
 
-          if(ip == null || config.allowedAddresses.indexOf(ip) == -1) {
-              console.log("Access denied from remote IP " + ip);
-              return next(new Error("Your IP address is not allowed to access this resource."));
-          }
-          next();
-        }
-    });
+    if(ip == null || !addressMatch(ip,whitelistArr)) {
+        console.log("Access denied from remote IP " + ip);
+        return next(new Error("Your IP address is not allowed to access this resource."));
+    }
+    next();
 });
 
-app.use(session({
+app.use(express.json());
+app.use(cookieParser());
+
+app.use(cookieSession({
+  name: 'session',
   secret: process.env.DBSECRET,
-  resave: true,
-  saveUninitialized: false
+  maxAge: 24 * 60 * 60 * 1000,
+  sameSite: 'lax',
+  httpOnly: true
 }));
 
 app.use(express.static('public'));
@@ -55,7 +92,7 @@ app.engine('handlebars', exhandle.engine({
 app.set('view engine', 'handlebars');
 
 // connect to database
-var connection;
+var pool;
 
 setTimeout(function() {
   pool = mysql.createPool({
@@ -115,9 +152,13 @@ class contextBlock {
     statsList: [],
   };
 
-  constructor(loggedin,username,sys,id) {
-    this.loggedin = loggedin;
-    this.username = username;
+  constructor(req,sys,id) {
+    if (req.session.csrf === undefined) {
+      req.session.csrf = randomBytes(100).toString('base64');
+    }
+    this.csrfToken = req.session.csrf;
+    this.loggedin = req.session.loggedin;
+    this.username = req.session.username;
     if (sys) {
       this.sysName = sys;
       this.layout = "system";
@@ -180,14 +221,18 @@ async function soaGetListData(context) {
 async function soaAddCustoms(char,user) {
   if (char.customEquips) {
     for (var item of char.customEquips) {
+      var pos = item.position;
+      var exp = item.is_expanded;
+      delete item.position;
+      delete item.is_expanded;
       if (item.id) {
         var response = await queryPromiseArr('UPDATE soa_equipment SET ? WHERE id=?',[item,item.id]);
-        char.equipment.push({id: item.id, uses: item.base_uses});
+        char.equipment.splice(pos,0,{id: item.id, uses: item.base_uses, is_expanded: exp});
         console.log("Custom soa item (id="+item.id+") updated by "+user);
       }else {
         delete item.id;
         var response = await queryPromiseArr("INSERT INTO soa_equipment SET ?", [item]);
-        char.equipment.push({id: response.insertId, uses: item.base_uses});
+        char.equipment.splice(pos,0,{id: response.insertId, uses: item.base_uses, is_expanded: exp});
         console.log("New soa item (id="+response.insertId+") created by "+user);
       }
     }
@@ -195,14 +240,18 @@ async function soaAddCustoms(char,user) {
 
   if (char.customMoves) {
     for (var move of char.customMoves) {
+      var pos = item.position;
+      var exp = item.is_expanded;
+      delete item.position;
+      delete item.is_expanded;
       if (move.id) {
         var response = await queryPromiseArr('UPDATE soa_moves SET ? WHERE id=?',[move,move.id]);
-        char.moves.push(move.id);
+        char.moves.splice(pos,0,{id:move.id, is_expanded: exp});
         console.log("Custom soa move (id="+move.id+") updated by "+user);
       }else {
         delete move.id;
         var response = await queryPromiseArr("INSERT INTO soa_moves SET ?", [move]);
-        char.moves.push(response.insertId);
+        char.moves.splice(pos,0,{id:response.insertId, is_expanded: exp});
         console.log("New soa move (id="+response.insertId+") created by "+user);
       }
     }
@@ -216,30 +265,33 @@ async function soaAddCustoms(char,user) {
 }
 
 // routing for home page using regex to catch possible home path variations
-app.get('/:homePath(home|index|index.html)?', (req, res) => {res.status(200).render('home', new contextBlock(req.session.loggedin,req.session.username))});
+app.get('/:homePath(home|index|index.html)?', (req, res) => {res.status(200).render('home', new contextBlock(req))});
 
 // routing for systems pages
 app.get('/systems/:sys', (req, res) => {
   var sys = req.params.sys;
-  var responseContext = new contextBlock(req.session.loggedin,req.session.username,sys);
-  if (systemsList.includes(sys)) {
-    if (sys=="soa") {
+  var responseContext = new contextBlock(req,sys);
+
+  if (!systemsList.includes(sys)) {
+    res.status(200).render(path.join('systems',sys), responseContext.rawify());
+  }
+
+  switch (sys) {
+    case "soa":
       soaGetListData(responseContext)
         .then((result) => {
           res.status(200).render(path.join('systems',sys), responseContext.rawify())
         });
-    }else {
-      res.status(200).render(path.join('systems',sys), responseContext.rawify());
-    }
-  }else {
-    res.status(404).render('404', responseContext);
+      break;
+    default:
+      res.status(404).render('404', responseContext);
   }
 });
 
 // routing for character list page
 app.get('/load_characters/:sys', (req, res) => {
   var sys = req.params.sys;
-  var responseContext = new contextBlock(req.session.loggedin,req.session.username,sys);
+  var responseContext = new contextBlock(req,sys);
 
   if (systemsList.includes(sys)) {
     queryPromise('SELECT * FROM '+sys+'_characters')
@@ -262,139 +314,182 @@ app.get('/load_characters/:sys', (req, res) => {
 
 
 // routing for loaded character pages
+// load soa characters
+async function soaLoadChar(context,char,userTZ,listData) {
+  // modify context
+  Object.keys(char).forEach(key => {
+    if (key=="id") {
+      context.sheetContext['charID'] = char[key];
+    }else if (key=="moves" || key=="equipment" || key=="created_at") {
+      // console.log(char[key]);
+    }else if (key=="users" || key=="basic_properties" || key=="playbooks") {
+      context.sheetContext[key] = JSON.parse(char[key]);
+    }else if (key.includes("stat") || key.includes("debility")) {
+      context.sheetContext["statsList"].forEach(stat => {
+        if (stat.statName.toUpperCase()==key.split("_")[1].toUpperCase()) {
+          stat['statValue'] = char[key];
+        }else if (stat.debilityName.toUpperCase()==key.split("_")[1].toUpperCase()) {
+          stat['debilityValue'] = char[key];
+        }
+      });
+    }else if (key=="last_updated") {
+      context.sheetContext[key] = new Date(char[key]).toLocaleString('en-US',{
+        timeZone: userTZ,
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        weekday: 'short',
+        hour12: true,
+        hour: 'numeric',
+        minute: 'numeric'
+      });
+    }else {
+      context.sheetContext[key] = char[key];
+    }
+  });
+
+  // create equipment list for character
+  if (char['equipment']) {
+    context.sheetContext['equipment'] = [];
+    JSON.parse(char["equipment"]).forEach(item => {
+      var itemObj = listData[0].find(entry => entry.id==item.id);
+      itemObj.uses = item.uses;
+      itemObj['is_expanded'] = item.is_expanded;
+      context.sheetContext['equipment'].push(itemObj);
+    });
+  }
+
+  // create move list for character
+  if (char['moves']) {
+    context.sheetContext['moves'] = [];
+    JSON.parse(char["moves"]).forEach(move => {
+      var moveObj = listData[1].find(entry => entry.id==move.id);
+      moveObj['is_custom'] = (moveObj.source == "Custom");
+      moveObj['is_expanded'] = move.is_expanded;
+      context.sheetContext['moves'].push(moveObj);
+    });
+  }
+}
+
 app.get('/character/:sys/:charid', (req, res) => {
   var sys = req.params.sys;
   var id = req.params.charid;
-  var responseContext = new contextBlock(req.session.loggedin,req.session.username,sys,id);
+  var responseContext = new contextBlock(req,sys,id);
 
-  if (systemsList.includes(sys)) {
-    // grab character data
-    queryPromise('SELECT * FROM '+sys+'_characters WHERE id='+id)
-      .then((rows) => {
-        if (JSON.parse(rows[0]['users']).includes(req.session.username)) {
-          // grab list data
-          if (sys=="soa") {
-            soaGetListData(responseContext)
-              .then((result) => {
-                // modify context
-                Object.keys(rows[0]).forEach(key => {
-                  if (key=="id") {
-                    responseContext.sheetContext['charID'] = rows[0][key];
-                  }else if (key=="moves" || key=="equipment" || key=="created_at") {
-                    // console.log(rows[0][key]);
-                  }else if (key=="users" || key=="basic_properties" || key=="playbooks") {
-                    responseContext.sheetContext[key] = JSON.parse(rows[0][key]);
-                  }else if (key.includes("stat") || key.includes("debility")) {
-                    responseContext.sheetContext["statsList"].forEach(stat => {
-                      if (stat.statName.toUpperCase()==key.split("_")[1].toUpperCase()) {
-                        stat['statValue'] = rows[0][key];
-                      }else if (stat.debilityName.toUpperCase()==key.split("_")[1].toUpperCase()) {
-                        stat['debilityValue'] = rows[0][key];
-                      }
-                    });
-                  }else if (key=="last_updated") {
-                    responseContext.sheetContext[key] = new Date(rows[0][key]).toLocaleString('en-US',{
-                      timeZone: req.session.userTZ,
-                      year: 'numeric',
-                      month: 'short',
-                      day: 'numeric',
-                      weekday: 'short',
-                      hour12: true,
-                      hour: 'numeric',
-                      minute: 'numeric'
-                    });
-                  }else {
-                    responseContext.sheetContext[key] = rows[0][key];
-                  }
-                });
-              
-                // create equipment list for character
-                if (rows[0]['equipment']) {
-                  responseContext.sheetContext['equipment'] = [];
-                  JSON.parse(rows[0]["equipment"]).forEach(item => {
-                    var itemObj = result[0].find(entry => entry.id==item.id);
-                    itemObj.uses = item.uses;
-                    responseContext.sheetContext['equipment'].push(itemObj);
-                  });
-                }
-              
-                // create move list for character
-                if (rows[0]['moves']) {
-                  responseContext.sheetContext['moves'] = [];
-                  JSON.parse(rows[0]["moves"]).forEach(move => {
-                    var moveObj = result[1].find(entry => entry.id==move);
-                    moveObj['is_custom'] = (moveObj.source == "Custom");
-                    responseContext.sheetContext['moves'].push(moveObj);
-                  });
-                }
-              })
-              .then((result) => {
-                res.status(200).render(path.join('systems',sys), responseContext.rawify());
-              });
-          }else {
-            res.status(200).render(path.join('systems',sys), responseContext.rawify());
-          }
-        }else {
-          res.status(404).render('404', responseContext);
-        }
-      });
-  }else {
+  if (!systemsList.includes(sys)) {
     res.status(404).render('404', responseContext);
+    return;
   }
+
+  // grab character data
+  queryPromise('SELECT * FROM '+sys+'_characters WHERE id='+id)
+    .then((rows) => {
+      if (!JSON.parse(rows[0]['users']).includes(req.session.username)) {
+        res.status(404).render('404', responseContext);
+        return;
+      }
+      
+      // grab list data
+      switch (sys) {
+        case "soa":
+          soaGetListData(responseContext)
+            .then(result => soaLoadChar(responseContext,rows[0],req.session.userTZ,result))
+            .then((result) => {
+              res.status(200).render(path.join('systems',sys), responseContext.rawify());
+            });
+          break;
+        default:
+          res.status(200).render(path.join('systems',sys), responseContext.rawify());
+      }
+    });
 });
 
+
+// POSTS
+
+// CSRF Checker Middleware
+function checkCSRF(req) {
+  var bodyToken = req.body.csrf;
+  delete req.body.csrf;
+  if (!bodyToken) {
+    console.log("CSRF Token not included");
+    return false;
+  }
+
+  if (bodyToken !== req.session.csrf) {
+    console.log("CSRF tokens do not match");
+    return false;
+  }
+
+  return true;
+}
+
 // authenticate login
-app.post('/auth/:loginType', express.json(), (req, res) => {
+app.post('/auth/:loginType', (req, res) => {
+  if (!checkCSRF(req)) {
+    res.send(new Error("CSRF Error"));
+    return;
+  }
   var type = req.params.loginType;
   var username = req.body.username;
   var password = req.body.password;
   var userTZ = req.body.userTZ;
 
-  if (username && password) {
-    queryPromise('SELECT * FROM user_accounts WHERE username="'+username+'"')
-      .then((rows) => {
-        if (rows.length > 0) {
-          if (type=="login") {
-            if (rows[0]['password']==password) {
-              req.session.loggedin = true;
-              req.session.username = username;
-              req.session.userTZ = userTZ;
-              res.send('Logged in');
-            }else {
-              res.send('Incorrect password');
-            }
-          }else {
-            res.send('Username not available');
-          }
-        }else {
-          if (type=="login") {
-            res.send('Username does not exist');
-          }else {
-            queryPromise('INSERT INTO user_accounts (username, password) VALUES (\"'+username+'\", \"'+password+'\")')
-              .then((result) => {
-                req.session.loggedin = true;
-                req.session.username = username;
-                req.session.userTZ = userTZ;
-                res.send('Account created');
-              });
-          }
-        }
-      });
-  }else {
+  if (!username || !password) {
     res.send('Must fill out both fields');
+    return;
   }
+
+  queryPromise('SELECT * FROM user_accounts WHERE username="'+username+'"')
+    .then((rows) => {
+      if (rows.length > 0) {
+        if (type=="signup") {
+          res.send('Username not available');
+          return;
+        }
+
+        if (rows[0]['password']==password) {
+          req.session.username = username;
+          req.session.userTZ = userTZ;
+          req.session.loggedin = true;
+          res.send('Logged in');
+        }else {
+          res.send('Incorrect password');
+        }
+      }else {
+        if (type=="login") {
+          res.send('Username does not exist');
+          return;
+        }
+
+        queryPromise('INSERT INTO user_accounts (username, password) VALUES (\"'+username+'\", \"'+password+'\")')
+          .then((result) => {
+            req.session.username = username;
+            req.session.userTZ = userTZ;
+            req.session.loggedin = true;
+            res.send('Account created');
+          });
+      }
+    });
 });
 
 // logout
 app.post('/logout', (req,res) => {
-  req.session.loggedin = false;
-  req.session.username = "";
-  req.session.userTZ = "";
+  if (!checkCSRF(req)) {
+    res.send(new Error("CSRF Error"));
+    return;
+  }
+  res.status(200).clearCookie('session');
+  req.session = null;
   res.status(200).send("Logged out");
 });
 
 // share character
-app.post('/share_character/:sys/:id', express.json(), (req,res) => {
+app.post('/share_character/:sys/:id', (req,res) => {
+  if (!checkCSRF(req)) {
+    res.send(new Error("CSRF Error"));
+    return;
+  }
   var sys = req.params.sys;
   var id = req.params.id;
   var newUser = req.body.newUser;
@@ -431,7 +526,11 @@ app.post('/share_character/:sys/:id', express.json(), (req,res) => {
 
 
 // catch save character request
-app.post('/save_character', express.json(), (req, res) => {
+app.post('/save_character', (req, res) => {
+  if (!checkCSRF(req)) {
+    res.send(new Error("CSRF Error"));
+    return;
+  }
   var character = req.body;
   character['image_url'] = character.image_url.slice(0,2083);
   if (character.id) {
@@ -460,26 +559,31 @@ app.post('/save_character', express.json(), (req, res) => {
   }else {
     soaAddCustoms(character,req.session.username)
       .then((result) => {
-        if (req.session.loggedin) {
-          // add user
-          character['users'] = [req.session.username];
-          character.users = JSON.stringify(character.users);
-
-          // add character to database
-          var response = queryPromiseArr('INSERT INTO soa_characters SET ?',[character]);
-          response.then((result) => {
-            console.log('New Character saved by '+req.session.username);
-            res.status(200).send('/character/soa/'+result.insertId);
-          });
-        }else {
+        if (!req.session.loggedin) {
           res.send("Must be logged in to create character");
+          return;
         }
+
+        // add user
+        character['users'] = [req.session.username];
+        character.users = JSON.stringify(character.users);
+
+        // add character to database
+        var response = queryPromiseArr('INSERT INTO soa_characters SET ?',[character]);
+        response.then((result) => {
+          console.log('New Character saved by '+req.session.username);
+          res.status(200).send('/character/soa/'+result.insertId);
+        });
       });
   }
 });
 
 // send raw data to client
 app.post('/database/:fetchType', (req, res) => {
+  if (!checkCSRF(req)) {
+    res.send(new Error("CSRF Error"));
+    return;
+  }
   var fetchType = req.params.fetchType;
   
   switch (fetchType) {
@@ -507,9 +611,25 @@ app.post('/database/:fetchType', (req, res) => {
 })
 
 // routing for 404 error page
-app.use((req, res) => {res.status(404).render('404', new contextBlock(req.session.loggedin,req.session.username))});
+app.use((req, res) => {res.status(404).render('404', new contextBlock(req))});
 
-// server creation
-app.listen(port, function () {
-  console.log("== Server is listening on port", port);
-});
+
+switch (envName) {
+  case "dev":
+    // dev server creation
+    http.createServer(app).listen(port, function () {
+      console.log("== Server is listening on port", port);
+    });
+    break;
+  case "prod":
+    // public server creation
+    var serverOptions = {
+      key: fs.readFileSync('certs/ServerKey.pem'),
+      cert: fs.readFileSync('certs/ServerCert.cert')
+    };
+
+    https.createServer(serverOptions,app).listen(port, function () {
+      console.log("== Server is listening on port", port);
+    });
+    break;
+}

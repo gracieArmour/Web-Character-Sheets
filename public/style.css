@@ -209,6 +209,12 @@ header {
     align-items: center;
 }
 
+#login-password-tutorial {
+    margin: 5px 20%;
+    text-align: center;
+    font-size: small;
+}
+
 /* share popup */
 #share-modal {
     position: relative;
@@ -243,6 +249,11 @@ header {
     cursor: pointer;
 }
 
+#share-title {
+    margin: 0 10%;
+    text-align: center;
+}
+
 #share-message {
     color: red;
 }
@@ -256,7 +267,8 @@ header {
 #share-list {
     display: flex;
     flex-direction: column;
-    padding-left: 20px;
+    align-items: center;
+    padding: 0;
 }
 
 .shared-entry {

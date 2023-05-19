@@ -17,35 +17,16 @@ navToggles.forEach(button => {
     button.addEventListener('click', toggleNavDropdown.bind(this,button));
 });
 
-document.getElementById("login-toggle").addEventListener("click", function () {
-    document.getElementById("login-modal-container").classList.remove("hidden");
-});
-
-var logoutButton = document.getElementById("logout-button");
-if (logoutButton) {
-    logoutButton.addEventListener("click", function() {
-        var confirmation = confirm("Are you sure you want to logout?");
-        if (confirmation) {
-            fetch('/logout', {method:'POST'})
-            location.reload();
-        }
-    });
-}
-
-
 
 // login system
-document.getElementById("close-login").addEventListener("click", function() {
-    document.getElementById("login-modal-container").classList.add("hidden");
-})
-
 async function sendLogin(type) {
     var usernameField = document.getElementById("login-username");
     var passwordField = document.getElementById("login-password");
     var o = {
         username: usernameField.value,
         password: passwordField.value,
-        userTZ: Intl.DateTimeFormat().resolvedOptions().timeZone
+        userTZ: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        csrf: document.getElementById("csrfToken").value
     };
 
     var loginResponse = await fetch('/auth/'+type, {
@@ -65,14 +46,43 @@ async function sendLogin(type) {
     console.log(loginReply);
 }
 
+var loginToggle = document.getElementById("login-toggle");
+if (loginToggle) {
+    loginToggle.addEventListener("click", function () {
+        document.getElementById("login-modal-container").classList.remove("hidden");
+    });
 
-document.getElementById("login-button").addEventListener("click", function() {
-    sendLogin('login');
-})
+    document.getElementById("close-login").addEventListener("click", function() {
+        document.getElementById("login-modal-container").classList.add("hidden");
+    });
+    
+    document.getElementById("login-button").addEventListener("click", function() {
+        sendLogin('login');
+    });
+    
+    document.getElementById("signup-button").addEventListener("click", function() {
+        sendLogin('signup');
+    });
+}
 
-document.getElementById("signup-button").addEventListener("click", function() {
-    sendLogin('signup');
-})
+var logoutButton = document.getElementById("logout-button");
+if (logoutButton) {
+    logoutButton.addEventListener("click", function() {
+        var confirmation = confirm("Are you sure you want to logout?");
+        if (confirmation) {
+            fetch('/logout', {
+                method:'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({csrf:document.getElementById("csrfToken").value})
+            })
+                .then((result) => {
+                    window.location.href = "/";
+                });
+        }
+    });
+}
 
 
 // share system toggles
@@ -93,7 +103,7 @@ window.addEventListener('keyup', function(e){
     if (e.shiftKey && e.ctrlKey && e.altKey && e.code == "KeyI") {
         [...document.getElementsByClassName("debug")].forEach(elem => {
             elem.classList.toggle("hidden");
-        })
+        });
         console.log("Debug Toggled");
     }
 }, false);

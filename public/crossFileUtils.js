@@ -18,6 +18,7 @@ function getCookie(name) {
 
 // save fetch
 async function sendSave(data) {
+    data.csrf = document.getElementById("csrfToken").value;
 	var response = await fetch('/save_character', {
 		method: 'POST',
 		headers: {
@@ -35,7 +36,11 @@ async function sendShare(sys,event) {
 	var shareUser = document.getElementById("share-username");
 	var existingUsers = [...document.querySelectorAll(".shared-entry label")];
 	var characterSheet = document.getElementById("character-sheet");
-    var o = {newUser: shareUser.value, existingUsers: existingUsers.map(elem => elem.textContent)};
+    var o = {
+        newUser: shareUser.value,
+        existingUsers: existingUsers.map(elem => elem.textContent),
+        csrf: document.getElementById("csrfToken").value
+    };
 	
     var shareResponse = await fetch('/share_character/'+sys+'/'+characterSheet.dataset.charid, {
         method: 'POST',

@@ -27,6 +27,7 @@ select {
 
 textarea {
     background-color: rgb(224, 224, 224);
+    resize: none;
 }
 
 
@@ -328,10 +329,33 @@ textarea {
     width: 150px;
 }
 
+.entry-util-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.edit-entry-button {
+    height: 20px;
+    width: 20px;
+    padding: 0;
+    text-align: center;
+    border-radius: 5px;
+}
+
 .collapse-button {
     border-radius: 5px;
     height: fit-content;
     width: fit-content;
+}
+
+.move-entry-button {
+    height: 20px;
+    width: 20px;
+    padding: 0;
+    text-align: center;
+    border-radius: 5px;
 }
 
 .entry-info {
@@ -523,7 +547,9 @@ div.entry-description {
 
 
 /* Notes */
-
+#notes-tutorial {
+    margin-bottom: 5px;
+}
 
 
 /* Character List */

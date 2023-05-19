@@ -3,7 +3,6 @@
         <label>
             <input name="move-name" placeholder="Name" value="{{name}}"/>
         </label>
-        <button class="collapse-move-button collapse-button" onclick="collapseContent(this)">Expand</button>
         <select name="type" value="{{type}}" oninput="this.parentNode.parentNode.data-type = this.value">
             {{#if type}}
             {{else}}
@@ -18,9 +17,14 @@
             <option value="School">School</option>
             <option value="Invocation">Invocation</option>
         </select>
-        <button class="delete-move-button" onclick="deleteHandler(this,'.move-entry')">x</button>
+        <div class="move-util-container entry-util-container">
+            <button class="collapse-move-button collapse-button" onclick="collapseContent(this)">{{#if is_expanded}}Collapse{{else}}Expand{{/if}}</button>
+            <button class="move-up-button move-entry-button" onclick="shiftUp(this.closest('.move-entry'))">^</button>
+            <button class="move-down-button move-entry-button" onclick="shiftDown(this.closest('.move-entry'))">⌄</button>
+            <button class="delete-move-button" onclick="deleteHandler(this,'.move-entry')">x</button>
+        </div>
     </div>
-    <div class="move-info entry-info">
+    <div class="move-info entry-info" {{#if is_expanded}}style="min-height: 100px; max-height: fit-content;"{{/if}}>
         <textarea class="entry-description" name="move-description" placeholder="Description">{{description}}</textarea>
     </div>
 </div>
