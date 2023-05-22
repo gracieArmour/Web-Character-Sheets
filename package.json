@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "concurrently": "^7.6.0",
+    "console-log-to-file": "^1.1.0",
     "cookie-parser": "^1.4.6",
     "cookie-session": "^2.0.0",
     "crypto": "^1.0.1",
@@ -16,7 +17,6 @@
     "express-handlebars": "^6.0.6",
     "handlebars": "^4.7.7",
     "helmet": "^6.1.5",
-    "log4js": "^6.9.1",
     "mysql": "^2.18.1"
   }
 }

@@ -4,7 +4,7 @@
 
 // dependencies
 require('dotenv').config();
-const log4js = require("log4js");
+const { consoleLogToFile } = require("console-log-to-file/dist/index.cjs.js");
 const express = require('express');
 const helmet = require('helmet');
 const cookieParser = require('cookie-parser');
@@ -24,11 +24,12 @@ var port = process.env.PORT;
 
 // set production logger
 if (envName=="prod") {
-  log4js.configure({
-    appenders: { output: { type: "file", filename: "output.log" }}
+  var dateNow = new Date();
+  var timeNow = dateNow.getHours() + '-' + dateNow.getMinutes();
+  var logPath = "logs/" + dateNow.toDateString() + ' -' + ' Start Time - ' + timeNow + ".log";
+  consoleLogToFile({
+    logFilePath: logPath
   });
-  log4js.setGlobalLogLevel("all");
-  log4js.replaceConsole();
 }
 
 // set up express for use with handlebars
@@ -52,6 +53,14 @@ app.use(helmet({
   },
   hsts: false
 }));
+
+// custom error class
+class codedError extends Error {
+  constructor(message, code) {
+    super(message);
+    this.status = code;
+  }
+}
 
 // server config
 function addressMatch(address,allowlist) {
@@ -78,7 +87,7 @@ app.use((req, res, next) => {
 
     if(ip == null || !addressMatch(ip,whitelistArr)) {
         console.log("Access denied from remote IP " + ip);
-        return next(new Error("Your IP address is not allowed to access this resource."));
+        return next(new codedError("Your IP address is not allowed to access this resource.",403));
     }
     return next();
 });
@@ -435,11 +444,11 @@ const checkCSRF = (req, res, next) => {
   var bodyToken = req.body.csrf;
   delete req.body.csrf;
   if (!bodyToken) {
-    return next(new Error("CSRF Token not included"));
+    return next(new codedError("CSRF Token not included",401));
   }
 
   if (bodyToken !== req.session.csrf) {
-    return next(new Error("CSRF tokens do not match"));
+    return next(new codedError("CSRF tokens do not match",401));
   }
 
   next();
