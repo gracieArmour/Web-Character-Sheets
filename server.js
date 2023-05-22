@@ -4,6 +4,7 @@
 
 // dependencies
 require('dotenv').config();
+const log4js = require("log4js");
 const express = require('express');
 const helmet = require('helmet');
 const cookieParser = require('cookie-parser');
@@ -18,8 +19,17 @@ const https = require('https');
 const cfUtils = require('./public/crossFileUtils.js');
 
 // collect environmentally stored variables
-var envName = process.env.ENVNAME;
+var envName = process.env.NODE_ENV;
 var port = process.env.PORT;
+
+// set production logger
+if (envName=="prod") {
+  log4js.configure({
+    appenders: { output: { type: "file", filename: "output.log" }}
+  });
+  log4js.setGlobalLogLevel("all");
+  log4js.replaceConsole();
+}
 
 // set up express for use with handlebars
 const app = express();
@@ -609,7 +619,7 @@ app.post('/database/:fetchType', checkCSRF, (req, res, next) => {
           res.status(200).send(output);
         });
   }
-})
+});
 
 // routing for 404 error page
 app.use((req, res) => {res.status(404).render('404', new contextBlock(req,'Page Not Found'))});
