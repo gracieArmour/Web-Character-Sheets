@@ -23,7 +23,7 @@ var envName = process.env.NODE_ENV;
 var port = process.env.PORT;
 
 // set production logger
-if (envName=="prod") {
+if (envName=="production") {
   var dateNow = new Date();
   var timeNow = dateNow.getHours() + '-' + dateNow.getMinutes();
   var logPath = "logs/" + dateNow.toDateString() + ' -' + ' Start Time - ' + timeNow + ".log";
@@ -642,7 +642,7 @@ switch (envName) {
       console.log("== Dev Server is listening on port", port);
     });
     break;
-  case "prod":
+  case "production":
     // public server creation
     var serverOptions = {
       key: fs.readFileSync('certs/ServerKey.pem'),
