@@ -2,9 +2,9 @@
     <input id="name-input" class="savable" placeholder="Name" name="name" value="{{name}}"/>
     <div id="main-info">
         <div id="character-img-container">
-            <img id="character-img" class="savable save-img" name="image_url" src="{{image_url}}"/>
+            <img id="character-img" class="savable save-img" name="image_url" onload="this.style.height = 'fit-content'" src="{{image_url}}"/>
             <button id="character-img-edit-button" type="button">✎</button>
-            <input id="character-img-input" class="hidden" placeholder="Image URL" value="{{image_url}}" oninput="this.parentNode.childNodes[1].src = this.value"/>
+            <input id="character-img-input" class="hidden" placeholder="Image URL" value="{{image_url}}"/>
         </div>
         
         <div id="character-properties-container">

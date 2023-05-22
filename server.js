@@ -141,6 +141,7 @@ const listStats = {
 };
 
 class contextBlock {
+  pageTitle;
   systems = systemsList;
   sysName;
   charID;
@@ -148,11 +149,12 @@ class contextBlock {
   username;
   // sheet context
   sheetContext = {
-    basic_properties: [{name:"Age"}, {name:"Height"}, {name:"Weight"}],
+    basic_properties: [{name:"Pronouns"}, {name:"Age"}, {name:"Height"}],
     statsList: [],
   };
 
-  constructor(req,sys,id) {
+  constructor(req,title,sys,id) {
+    this.pageTitle = title;
     if (req.session.csrf === undefined) {
       req.session.csrf = randomBytes(100).toString('base64');
     }
@@ -220,7 +222,7 @@ async function soaGetListData(context) {
 
 async function soaAddCustoms(char,user) {
   if (char.customEquips) {
-    for (var item of char.customEquips) {
+    for (let item of char.customEquips) {
       var pos = item.position;
       var exp = item.is_expanded;
       delete item.position;
@@ -239,7 +241,7 @@ async function soaAddCustoms(char,user) {
   }
 
   if (char.customMoves) {
-    for (var move of char.customMoves) {
+    for (let move of char.customMoves) {
       var pos = move.position;
       var exp = move.is_expanded;
       delete move.position;
@@ -270,48 +272,50 @@ app.get('/:homePath(home|index|index.html)?', (req, res) => {res.status(200).ren
 // routing for systems pages
 app.get('/systems/:sys', (req, res, next) => {
   var sys = req.params.sys;
-  var responseContext = new contextBlock(req,sys);
-
   if (!systemsList.includes(sys)) {
-    res.status(200).render(path.join('systems',sys), responseContext.rawify());
+    res.status(404).render('404', new contextBlock(req,'Page Not Found'));
+    return;
   }
+
+  var responseContext = new contextBlock(req,sys,sys);
 
   switch (sys) {
     case "soa":
       soaGetListData(responseContext)
+        .catch(next)
         .then((result) => {
           res.status(200).render(path.join('systems',sys), responseContext.rawify())
-        })
-        .catch(next);
+        });
       break;
     default:
-      res.status(404).render('404', responseContext);
+      res.status(200).render(path.join('systems',sys), responseContext.rawify());
   }
 });
 
 // routing for character list page
 app.get('/load_characters/:sys', (req, res, next) => {
   var sys = req.params.sys;
-  var responseContext = new contextBlock(req,sys);
-
-  if (systemsList.includes(sys)) {
-    queryPromise('SELECT * FROM '+sys+'_characters')
-      .then((rows) => {
-        // modify context
-        responseContext.sheetContext['charactersList'] = [];
-        rows.forEach(row => {
-          if (JSON.parse(row.users).includes(req.session.username)) {
-            responseContext.sheetContext['charactersList'].push({id: row.id,name: row.name,image: row.image_url});
-          }
-      })
-      .catch(next);
-
-        // send response
-        res.status(200).render('characterList', responseContext.rawify());
-      });
-  }else {
-    res.status(404).render('404', responseContext);
+  if (!systemsList.includes(sys)) {
+    res.status(404).render('404', new contextBlock(req,'Page Not Found'));
+    return;
   }
+
+  var responseContext = new contextBlock(req,'Character List',sys);
+
+  queryPromise('SELECT * FROM '+sys+'_characters')
+    .catch(next)
+    .then((rows) => {
+      // modify context
+      responseContext.sheetContext['charactersList'] = [];
+      rows.forEach(row => {
+        if (JSON.parse(row.users).includes(req.session.username)) {
+          responseContext.sheetContext['charactersList'].push({id: row.id,name: row.name,image: row.image_url});
+        }
+    });
+
+      // send response
+      res.status(200).render('characterList', responseContext.rawify());
+    });
 });
 
 
@@ -320,22 +324,27 @@ app.get('/load_characters/:sys', (req, res, next) => {
 async function soaLoadChar(context,char,userTZ,listData) {
   // modify context
   Object.keys(char).forEach(key => {
+    let data = char[key];
+
     if (key=="id") {
-      context.sheetContext['charID'] = char[key];
+      context.sheetContext['charID'] = data;
+    }else if (key=="name") {
+      context.sheetContext[key] = data;
+      context.pageTitle = data;
     }else if (key=="moves" || key=="equipment" || key=="created_at") {
-      // console.log(char[key]);
+      // console.log(data);
     }else if (key=="users" || key=="basic_properties" || key=="playbooks") {
-      context.sheetContext[key] = JSON.parse(char[key]);
+      context.sheetContext[key] = JSON.parse(data);
     }else if (key.includes("stat") || key.includes("debility")) {
       context.sheetContext["statsList"].forEach(stat => {
         if (stat.statName.toUpperCase()==key.split("_")[1].toUpperCase()) {
-          stat['statValue'] = char[key];
+          stat['statValue'] = data;
         }else if (stat.debilityName.toUpperCase()==key.split("_")[1].toUpperCase()) {
-          stat['debilityValue'] = char[key];
+          stat['debilityValue'] = data;
         }
       });
     }else if (key=="last_updated") {
-      context.sheetContext[key] = new Date(char[key]).toLocaleString('en-US',{
+      context.sheetContext[key] = new Date(data).toLocaleString('en-US',{
         timeZone: userTZ,
         year: 'numeric',
         month: 'short',
@@ -346,7 +355,7 @@ async function soaLoadChar(context,char,userTZ,listData) {
         minute: 'numeric'
       });
     }else {
-      context.sheetContext[key] = char[key];
+      context.sheetContext[key] = data;
     }
   });
 
@@ -374,46 +383,45 @@ async function soaLoadChar(context,char,userTZ,listData) {
 }
 
 app.get('/character/:sys/:charid', (req, res, next) => {
-
   var sys = req.params.sys;
   var id = req.params.charid;
-  var responseContext = new contextBlock(req,sys,id);
-
   if (!systemsList.includes(sys) || isNaN(id)) {
-    res.status(404).render('404', responseContext);
+    res.status(404).render('404', new contextBlock(req,'Page Not Found'));
     return;
   }
 
+  var responseContext = new contextBlock(req,null,sys,id);
+
   // grab character data
   queryPromise('SELECT * FROM '+sys+'_characters WHERE id='+id)
+    .catch(next)
     .then((rows) => {
       if (!JSON.parse(rows[0]['users']).includes(req.session.username)) {
-        res.status(404).render('404', responseContext);
+        res.status(404).render('404', new contextBlock(req,'Page Not Found'));
         return;
       }
-      
+
       // grab list data
       switch (sys) {
         case "soa":
           soaGetListData(responseContext)
             .then(result => soaLoadChar(responseContext,rows[0],req.session.userTZ,result))
+            .catch(next)
             .then((result) => {
               res.status(200).render(path.join('systems',sys), responseContext.rawify());
-            })
-            .catch(next);
+            });
           break;
         default:
           res.status(200).render(path.join('systems',sys), responseContext.rawify());
       }
-    })
-    .catch(next);
+    });
 });
 
 
 // POSTS
 
 // CSRF Checker Middleware
-function checkCSRF(req, res, next) {
+const checkCSRF = (req, res, next) => {
   var bodyToken = req.body.csrf;
   delete req.body.csrf;
   if (!bodyToken) {
@@ -423,6 +431,8 @@ function checkCSRF(req, res, next) {
   if (bodyToken !== req.session.csrf) {
     return next(new Error("CSRF tokens do not match"));
   }
+
+  next();
 }
 
 // authenticate login
@@ -438,6 +448,7 @@ app.post('/auth/:loginType', checkCSRF, (req, res, next) => {
   }
 
   queryPromise('SELECT * FROM user_accounts WHERE username="'+username+'"')
+    .catch(next)
     .then((rows) => {
       if (rows.length > 0) {
         if (type=="signup") {
@@ -460,16 +471,15 @@ app.post('/auth/:loginType', checkCSRF, (req, res, next) => {
         }
 
         queryPromise('INSERT INTO user_accounts (username, password) VALUES (\"'+username+'\", \"'+password+'\")')
+          .catch(next)
           .then((result) => {
             req.session.username = username;
             req.session.userTZ = userTZ;
             req.session.loggedin = true;
             res.send('Account created');
-          })
-          .catch(next);
+          });
       }
-    })
-    .catch(next);
+    });
 });
 
 // logout
@@ -488,6 +498,7 @@ app.post('/share_character/:sys/:id', checkCSRF, (req, res, next) => {
 
   if (newUser) {
     queryPromise('SELECT * FROM user_accounts WHERE username="'+newUser+'"')
+      .catch(next)
       .then((rows) => {
         if (rows.length > 0) {
           if (!existingUsers.includes(newUser)) {
@@ -497,24 +508,23 @@ app.post('/share_character/:sys/:id', checkCSRF, (req, res, next) => {
             existingUsers.push(req.session.username);
           }
           queryPromise('UPDATE '+sys+'_characters SET users=\''+JSON.stringify(existingUsers)+'\' WHERE id='+id)
+            .catch(next)
             .then((result) => {
               res.send('Shared successfully');
-            })
-            .catch(next);
+            });
         }else {
           res.send('Account does not exist, username may be misspelled');
         }
-      })
-      .catch(next);
+      });
   }else {
     if (!(existingUsers.includes(req.session.username))) {
       existingUsers.push(req.session.username);
     }
     queryPromise('UPDATE '+sys+'_characters SET users=\''+JSON.stringify(existingUsers)+'\' WHERE id='+id)
+      .catch(next)
       .then((result) => {
         res.send('Shared successfully');
-      })
-      .catch(next);
+      });
   }
 });
 
@@ -525,6 +535,7 @@ app.post('/save_character', checkCSRF, (req, res, next) => {
   character['image_url'] = character.image_url.slice(0,2083);
   if (character.id) {
     soaAddCustoms(character,req.session.username)
+      .catch(next)
       .then((result) => {
         var charid = character.id;
         delete character.id;
@@ -532,6 +543,7 @@ app.post('/save_character', checkCSRF, (req, res, next) => {
         response.then((result) => {
           console.log('Existing Character updated by '+req.session.username);
           queryPromise("SELECT last_updated FROM soa_characters WHERE id="+charid)
+            .catch(next)
             .then((rows) => {
               res.status(200).send(new Date(rows[0].last_updated).toLocaleString('en-US',{
                 timeZone: req.session.userTZ,
@@ -543,10 +555,8 @@ app.post('/save_character', checkCSRF, (req, res, next) => {
                 hour: 'numeric',
                 minute: 'numeric'
               }));
-            })
-            .catch(next);
-        })
-        .catch(next);
+            });
+        });
       });
   }else {
     soaAddCustoms(character,req.session.username)
@@ -561,48 +571,48 @@ app.post('/save_character', checkCSRF, (req, res, next) => {
         character.users = JSON.stringify(character.users);
 
         // add character to database
-        var response = queryPromiseArr('INSERT INTO soa_characters SET ?',[character]);
-        response.then((result) => {
-          console.log('New Character saved by '+req.session.username);
-          res.status(200).send('/character/soa/'+result.insertId);
-        });
-      })
-      .catch(next);
+        queryPromiseArr('INSERT INTO soa_characters SET ?',[character])
+          .catch(next)
+          .then((result) => {
+            console.log('New Character saved by '+req.session.username);
+            res.status(200).send('/character/soa/'+result.insertId);
+          });
+      });
   }
 });
 
 // send raw data to client
-app.post('/database/:fetchType', checkCSRF, (req, res) => {
+app.post('/database/:fetchType', checkCSRF, (req, res, next) => {
   var fetchType = req.params.fetchType;
   
   switch (fetchType) {
     case "AllMoves":
     case "AllEquipment":
       queryPromise('SELECT * FROM soa_'+fetchType.replace("All","").toLowerCase())
+        .catch(next)
         .then((rows) => {
           var output = {};
           rows.forEach(row => {
             output[row.id] = row;
           });
           res.status(200).send(output);
-        })
-        .catch(next);
+        });
       break;
     case "AllPlaybooks":
       queryPromise('SELECT DISTINCT source FROM soa_moves WHERE source<>"Custom"')
+        .catch(next)
         .then((rows) => {
           var output = [];
           rows.forEach(row => {
             output.push(row.source);
           });
           res.status(200).send(output);
-        })
-        .catch(next);
+        });
   }
 })
 
 // routing for 404 error page
-app.use((req, res) => {res.status(404).render('404', new contextBlock(req))});
+app.use((req, res) => {res.status(404).render('404', new contextBlock(req,'Page Not Found'))});
 
 
 switch (envName) {

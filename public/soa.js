@@ -6,6 +6,15 @@ var simplemde = new SimpleMDE({ element: document.getElementById("character-note
 simplemde.togglePreview();
 
 // DYNAMIC LISTENERS
+function updateImg() {
+	var charImg = document.getElementById("character-img");
+	var newSrc = document.getElementById("character-img-input").value;
+	charImg.src = newSrc;
+	if (!newSrc) {
+		charImg.style.height = "150px";
+	}
+}
+
 function deleteHandler(elem,selector) {
 	elem.closest(selector).remove();
 }
@@ -111,7 +120,6 @@ function getCharData() {
 
 	savables.forEach(elem => {
 		if (elem.classList.contains("save-img")) {
-			console.log(elem.src.includes("localhost") ? "" : elem.src);
 			o[elem.name] = elem.src.includes("localhost") ? "" : elem.src;
 		}else if (elem.classList.contains("save-bProps")) {
 			o['basic_properties'].push({name:elem.name,value:elem.value});
@@ -297,6 +305,8 @@ if (deleteCharacterButton) {
 		}
 	});
 }
+
+document.getElementById("character-img-input").addEventListener("input",updateImg);
 
 document.getElementById("add-basic-property-button").addEventListener("click", function () {
 	var currentCount = [...document.getElementsByClassName("character-property")].length;
