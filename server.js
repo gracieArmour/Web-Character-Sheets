@@ -59,6 +59,7 @@ class codedError extends Error {
   constructor(message, code) {
     super(message);
     this.status = code;
+    this.statusCode = code;
   }
 }
 
