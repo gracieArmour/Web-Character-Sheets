@@ -1,5 +1,5 @@
 <div id="character-sheet" data-charid="{{sheetContext.charID}}">
-    {{> basicInfo sheetContext}}
+    {{> basicInfoModule sheetContext}}
 
     <div id="section-container">
         <div id="left-section" class="split-section">
@@ -21,33 +21,13 @@
                     </div>
                 </div>
 
-                <div id="level-container">
-                    <label>Level</label>
-                    <input id="level-value" class="big-number savable" name="level" value="{{sheetContext.level}}">
-                </div>
-
-                <div id="xp-container">
-                    <label>XP</label>
-                    <input id="xp-value" class="big-number savable" type="number" name="xp" value="{{sheetContext.xp}}">
-                </div>
+                {{> levelModule sheetContext}}
             </div>
 
-            <div id="stats-section" class="container">
-                {{#each sheetContext.statsList}}
-                    {{> soaStatBox}}
-                {{/each}}
-            </div>
+            {{> statsModule sheetContext}}
 
             <div id="combat-section" class="container">
-                <div id="hp-container" class="combat-container savable save-hp">
-                    <label>Hit Points</label>
-                    <input id="hp-display" class="big-number" value="{{sheetContext.current_hp}}" oninput="this.nextElementSibling.value = this.value"/>
-                    <input id="hp-slider" type="range" value="{{sheetContext.current_hp}}" min="0" max="{{sheetContext.max_hp}}" oninput="this.previousElementSibling.value = this.value"/>
-                    <div id="max-hp-container">
-                        <label>Max:</label>
-                        <input id="max-hp-input" class="big-number" value="{{sheetContext.max_hp}}" oninput="this.parentNode.previousElementSibling.max = this.value"/>
-                    </div>
-                </div>
+                {{> hpModule sheetContext}}
 
                 <div id="armor-container" class="combat-container">
                     <label>Armor</label>
@@ -136,11 +116,9 @@
             </div>
         </div>
     </div>
-    <div id="notes-section">
-        <label><h2>Notes</h2></label>
-        <div id="notes-tutorial">The notes start in Preview mode, press the little eye button to switch to Edit mode.</div>
-        <textarea id="character-notes">{{sheetContext.notes}}</textarea>
-    </div>
+
+    {{> notesModule sheetContext}}
+    
     <div id="debug-area" class="debug hidden">
         <pre>{{raw}}</pre>
     </div>

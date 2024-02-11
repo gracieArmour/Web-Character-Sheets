@@ -1,0 +1,27 @@
+<div id="character-sheet" data-charid="{{sheetContext.charID}}">
+    {{> basicInfoModule sheetContext}}
+    
+    <div id="section-container">
+        <div id="left-section" class="split-section">
+
+        </div>
+
+        <div id="right-container" class="split-section">
+
+        </div>
+    </div>
+
+    {{> notesModule sheetContext}}
+
+    <div id="debug-area" class="debug hidden">
+        <pre>{{raw}}</pre>
+    </div>
+</div>
+
+{{#if sheetContext.charID}}
+    {{> shareModal sheetContext}}
+{{/if}}
+
+<!--additional file dependencies-->
+<link rel="stylesheet" href="/SYSTEM.css"/>
+<script type="text/javascript" src="/SYSTEM.js" defer></script>

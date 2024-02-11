@@ -1,0 +1,9 @@
+<div id="hp-container" class="combat-container savable save-hp">
+    <label>Hit Points</label>
+    <input id="hp-display" class="big-number" value="{{current_hp}}" oninput="this.nextElementSibling.value = this.value"/>
+    <input id="hp-slider" type="range" value="{{current_hp}}" min="0" max="{{max_hp}}" oninput="this.previousElementSibling.value = this.value"/>
+    <div id="max-hp-container">
+        <label>Max:</label>
+        <input id="max-hp-input" class="big-number" value="{{max_hp}}" oninput="this.parentNode.previousElementSibling.max = this.value"/>
+    </div>
+</div>
